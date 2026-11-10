@@ -55,11 +55,14 @@ func (s *Service) Register(ctx context.Context, req AuthRequest) (AuthResponse, 
 }
 func (s *Service) Login(ctx context.Context, req AuthRequest) (AuthResponse, error) {
 	u, hash, err := s.repo.FindUserByEmail(ctx, strings.ToLower(strings.TrimSpace(req.Email)))
-	if errors.Is(err, pgx.ErrNoRows) || bcrypt.CompareHashAndPassword([]byte(hash), []byte(req.Password)) != nil {
-		return AuthResponse{}, errUnauthorized
-	}
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return AuthResponse{}, errUnauthorized
+		}
 		return AuthResponse{}, err
+	}
+	if bcrypt.CompareHashAndPassword([]byte(hash), []byte(req.Password)) != nil {
+		return AuthResponse{}, errUnauthorized
 	}
 	return s.withSession(ctx, u)
 }
