@@ -530,6 +530,71 @@ func (a *App) shopItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(items)
 }
 
+func (a *App) shopInventory(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	auth := r.Header.Get("Authorization")
+	if !strings.HasPrefix(auth, "Bearer ") || strings.TrimPrefix(auth, "Bearer ") == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	type InventoryItem struct {
+		ID          string    `json:"id"`
+		Name        string    `json:"name"`
+		Description string    `json:"description"`
+		Rarity      string    `json:"rarity"`
+		Icon        string    `json:"icon"`
+		PurchasedAt time.Time `json:"purchased_at"`
+	}
+
+	rows, err := a.db.Query(r.Context(), `
+		SELECT i.id, i.name, i.description, i.rarity, i.icon, ui.purchased_at
+		FROM user_inventory ui
+		JOIN shop_items i ON i.id = ui.item_id
+		WHERE ui.user_id = (
+			SELECT user_id FROM sessions WHERE token_hash = $1 AND expires_at > NOW() LIMIT 1
+		)
+		ORDER BY ui.purchased_at DESC, ui.id DESC
+	`, hashToken(strings.TrimPrefix(auth, "Bearer ")))
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	items := make([]InventoryItem, 0)
+	for rows.Next() {
+		var item InventoryItem
+		if err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Rarity, &item.Icon, &item.PurchasedAt); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// An invalid or expired token must not look like an empty inventory.
+	var valid bool
+	if err := a.db.QueryRow(r.Context(), `SELECT EXISTS (SELECT 1 FROM sessions WHERE token_hash = $1 AND expires_at > NOW())`, hashToken(strings.TrimPrefix(auth, "Bearer "))).Scan(&valid); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if !valid {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(items)
+}
+
 func (a *App) shopBuy(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -697,6 +762,7 @@ func main() {
 	http.HandleFunc("/api/wallet/demo-add", app.demoAdd)
 	http.HandleFunc("/api/wallet/demo-spend", app.demoSpend)
 	http.HandleFunc("/api/shop/items", app.shopItems)
+	http.HandleFunc("/api/shop/inventory", app.shopInventory)
 	http.HandleFunc("/api/shop/buy", app.shopBuy)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

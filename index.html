@@ -456,6 +456,7 @@
         <div class="nav">
           <button class="active" data-page="overview">▦ Обзор</button>
           <button data-page="shop">🛒 Магазин</button>
+          <button data-page="inventory">🎒 Инвентарь</button>
           <button data-page="referrals">♧ Рефералы</button>
           <button data-page="transactions">↕ Операции</button>
           <button data-page="profile">◎ Профиль</button>
@@ -506,6 +507,11 @@
           </p>
 
           <div id="shopGrid" class="grid"></div>
+        </div>
+        <div id="page-inventory" class="hidden">
+          <h1>Инвентарь</h1>
+          <p class="sub">Предметы, которые вы приобрели</p>
+          <div id="inventoryGrid" class="grid"></div>
         </div>
         <div id="page-referrals" class="hidden">
           <h1>Реферальная программа</h1>
@@ -576,6 +582,7 @@
 
     let currentUser = null;
     let demo = { balance: 0, earned: 0, transactions: [] };
+    let inventory = [];
 
     const TOKEN_KEY = "demo_fintech_token";
 
@@ -973,7 +980,11 @@
       grid.textContent = "Загрузка магазина...";
 
       try {
-        const items = await request("/api/shop/items");
+        const [items, owned] = await Promise.all([
+          request("/api/shop/items"),
+          request("/api/shop/inventory", { headers: { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) } })
+        ]);
+        inventory = owned;
         grid.replaceChildren();
 
         for (const item of items) {
@@ -995,6 +1006,12 @@
             item.price.toLocaleString("ru-RU") + " монет";
 
           const button = card.querySelector("button");
+          const ownedItem = inventory.some(owned => owned.id === item.id);
+          if (ownedItem) {
+            button.textContent = "Уже куплено";
+            button.disabled = true;
+            card.classList.add("owned");
+          }
 
           button.onclick = async () => {
             button.disabled = true;
@@ -1032,8 +1049,9 @@
               }));
 
               render();
-
-              button.textContent = "Куплено";
+              await loadInventory();
+              button.textContent = "Уже куплено";
+              button.disabled = true;
               toast("Предмет приобретён: " + item.name);
 
             } catch (error) {
@@ -1053,6 +1071,36 @@
     document
       .querySelector('[data-page="shop"]')
       .addEventListener("click", loadShop);
+
+    async function loadInventory() {
+      const grid = document.getElementById("inventoryGrid");
+      grid.textContent = "Загрузка инвентаря...";
+      try {
+        inventory = await request("/api/shop/inventory", {
+          headers: { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) }
+        });
+        grid.replaceChildren();
+        if (!inventory.length) {
+          grid.innerHTML = '<div class="empty">Пока нет приобретённых предметов</div>';
+          return;
+        }
+        for (const item of inventory) {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = '<h2 class="section-title"></h2><p class="muted"></p><p class="muted"></p>';
+          card.children[0].textContent = item.name;
+          card.children[1].textContent = "Редкость: " + item.rarity;
+          card.children[2].textContent = "Куплено: " + new Date(item.purchased_at).toLocaleString("ru-RU");
+          grid.appendChild(card);
+        }
+      } catch (error) {
+        grid.textContent = "Ошибка загрузки: " + error.message;
+      }
+    }
+
+    document
+      .querySelector('[data-page="inventory"]')
+      .addEventListener("click", loadInventory);
 
 
     setMode("login");
