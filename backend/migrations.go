@@ -30,13 +30,6 @@ func runMigrations(ctx context.Context, db *pgxpool.Pool) error {
 	}
 	sort.Strings(files)
 	for _, file := range files {
-		var applied bool
-		if err := db.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE version=$1)`, file).Scan(&applied); err != nil {
-			return err
-		}
-		if applied {
-			continue
-		}
 		data, err := os.ReadFile(filepath.Join(path, file))
 		if err != nil {
 			return err
@@ -45,7 +38,21 @@ func runMigrations(ctx context.Context, db *pgxpool.Pool) error {
 		if err != nil {
 			return err
 		}
-		if _, err = tx.Exec(ctx, string(data)); err == nil {
+		// Serialize migration runners across all application processes.
+		if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended('demo-fintech:migrations', 0))`); err == nil {
+			var applied bool
+			err = tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE version=$1)`, file).Scan(&applied)
+			if err == nil && applied {
+				err = tx.Commit(ctx)
+				if err == nil {
+					continue
+				}
+			}
+		}
+		if err == nil {
+			_, err = tx.Exec(ctx, string(data))
+		}
+		if err == nil {
 			_, err = tx.Exec(ctx, `INSERT INTO schema_migrations(version) VALUES($1)`, file)
 		}
 		if err != nil {

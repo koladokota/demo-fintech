@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"github.com/jackc/pgx/v5"
 	"net/http"
 	"strings"
 )
@@ -24,6 +26,10 @@ func (s *Service) RequireAuth(next http.Handler) http.Handler {
 		}
 		u, err := s.User(r.Context(), token)
 		if err != nil {
+			if !errors.Is(err, pgx.ErrNoRows) {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
+			}
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

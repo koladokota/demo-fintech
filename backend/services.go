@@ -6,6 +6,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
 )
@@ -43,14 +45,21 @@ func (s *Service) Register(ctx context.Context, req AuthRequest) (AuthResponse, 
 	}
 	u, err := s.repo.CreateUser(ctx, id, req.Name, req.Email, string(hash))
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return AuthResponse{}, errConflict
+		}
 		return AuthResponse{}, err
 	}
 	return s.withSession(ctx, u)
 }
 func (s *Service) Login(ctx context.Context, req AuthRequest) (AuthResponse, error) {
 	u, hash, err := s.repo.FindUserByEmail(ctx, strings.ToLower(strings.TrimSpace(req.Email)))
-	if err != nil || bcrypt.CompareHashAndPassword([]byte(hash), []byte(req.Password)) != nil {
+	if errors.Is(err, pgx.ErrNoRows) || bcrypt.CompareHashAndPassword([]byte(hash), []byte(req.Password)) != nil {
 		return AuthResponse{}, errUnauthorized
+	}
+	if err != nil {
+		return AuthResponse{}, err
 	}
 	return s.withSession(ctx, u)
 }
@@ -80,3 +89,4 @@ func (s *Service) SpendDemo(ctx context.Context, userID string) (int64, error) {
 var errInvalidInput = errors.New("invalid input")
 var errUnauthorized = errors.New("unauthorized")
 var errDemoDisabled = errors.New("demo credits disabled")
+var errConflict = errors.New("conflict")

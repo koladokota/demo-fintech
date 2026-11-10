@@ -50,8 +50,10 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, errInvalidInput) {
 			http.Error(w, "Invalid name, email or password (minimum 8 characters)", 400)
-		} else {
+		} else if errors.Is(err, errConflict) {
 			http.Error(w, "Email may already be registered", 409)
+		} else {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -68,6 +70,10 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	res, err := h.s.Login(r.Context(), req)
 	if err != nil {
+		if !errors.Is(err, errUnauthorized) {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		http.Error(w, "Invalid email or password", 401)
 		return
 	}
@@ -119,6 +125,10 @@ func (h *Handler) DemoSpend(w http.ResponseWriter, r *http.Request) {
 	u, _ := userFromContext(r.Context())
 	balance, err := h.s.SpendDemo(r.Context(), u.ID)
 	if err != nil {
+		if !errors.Is(err, errInsufficientBalance) {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 		http.Error(w, "Insufficient balance", 400)
 		return
 	}
@@ -170,7 +180,11 @@ func (h *Handler) ShopBuy(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Item already owned", http.StatusConflict)
 			return
 		}
-		http.Error(w, "Insufficient balance", 400)
+		if errors.Is(err, errInsufficientBalance) {
+			http.Error(w, "Insufficient balance", 400)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 	jsonResponse(w, map[string]any{"status": "success", "item_id": req.ItemID, "balance": balance})

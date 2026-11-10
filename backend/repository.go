@@ -58,6 +58,9 @@ func (r *Repository) ChangeBalance(ctx context.Context, userID string, amount in
 	defer tx.Rollback(ctx)
 	var balance int64
 	if err = tx.QueryRow(ctx, `UPDATE users SET virtual_balance=virtual_balance+$1 WHERE id=$2 AND virtual_balance+$1>=0 RETURNING virtual_balance`, amount, userID).Scan(&balance); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, errInsufficientBalance
+		}
 		return 0, err
 	}
 	if _, err = tx.Exec(ctx, `INSERT INTO wallet_transactions(user_id,amount,type,description) VALUES($1,$2,$3,$4)`, userID, amount, typ, description); err != nil {
