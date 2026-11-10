@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Условное название — демо-платформа</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --panel: #111827;
+      --panel2: #151f30;
+      --line: #263348;
+      --text: #eef3fb;
+      --muted: #91a0b6;
+      --accent: #65d6ad;
+      --blue: #7aa7ff;
+      --danger: #ff7d8b
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at 15% 0%, #17263a 0, transparent 38%), var(--bg);
+      color: var(--text);
+      font: 15px/1.5 Inter, system-ui, -apple-system, Segoe UI, sans-serif
+    }
+
+    button,
+    input {
+      font: inherit
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      background: var(--accent);
+      color: #07140f;
+      font-weight: 700
+    }
+
+    button.secondary {
+      background: #202d42;
+      color: var(--text);
+      border: 1px solid var(--line)
+    }
+
+    button.danger {
+      background: #492630;
+      color: #ffd9de;
+      border: 1px solid #70404b
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: auto;
+      padding: 24px
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 30px
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-weight: 800;
+      font-size: 18px
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      display: grid;
+      place-items: center;
+      color: #07140f;
+      font-weight: 900
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+
+    .pill {
+      font-size: 11px;
+      color: #9cebd0;
+      background: #15372f;
+      border: 1px solid #245344;
+      padding: 5px 9px;
+      border-radius: 30px;
+      letter-spacing: .04em
+    }
+
+    .auth {
+      max-width: 440px;
+      margin: 7vh auto;
+      background: #111827;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 70px #0005
+    }
+
+    .auth h1 {
+      font-size: 27px;
+      margin: 8px 0
+    }
+
+    .auth p {
+      color: var(--muted);
+      margin: 0 0 24px
+    }
+
+    .field {
+      display: block;
+      margin: 14px 0
+    }
+
+    .field span {
+      display: block;
+      font-size: 13px;
+      color: #b5c1d2;
+      margin-bottom: 7px
+    }
+
+    .field input {
+      width: 100%;
+      background: #0b1220;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      color: var(--text);
+      outline: none
+    }
+
+    .field input:focus {
+      border-color: var(--accent)
+    }
+
+    .full {
+      width: 100%;
+      margin-top: 8px
+    }
+
+    .switch {
+      text-align: center;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .link {
+      background: none;
+      color: var(--accent);
+      padding: 0;
+      font-weight: 600
+    }
+
+    .notice {
+      font-size: 12px;
+      color: #aebbd0;
+      background: #172337;
+      border: 1px solid #2b3b54;
+      padding: 11px 13px;
+      border-radius: 10px;
+      margin-top: 17px
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 22px
+    }
+
+    .side,
+    .card {
+      background: #111827;
+      border: 1px solid var(--line);
+      border-radius: 16px
+    }
+
+    .side {
+      padding: 14px;
+      height: max-content;
+      position: sticky;
+      top: 18px
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .nav button {
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      font-weight: 600
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      background: #1b293d;
+      color: var(--text)
+    }
+
+    .side-foot {
+      border-top: 1px solid var(--line);
+      margin-top: 18px;
+      padding: 16px 8px 4px;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    main h1 {
+      font-size: 26px;
+      margin: 2px 0 4px
+    }
+
+    main .sub {
+      color: var(--muted);
+      margin: 0 0 22px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 16px
+    }
+
+    .card {
+      padding: 19px
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .metric {
+      font-size: 29px;
+      font-weight: 800;
+      margin: 8px 0 2px;
+      letter-spacing: -.03em
+    }
+
+    .metric small {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500
+    }
+
+    .positive {
+      color: var(--accent)
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px
+    }
+
+    .section-title {
+      font-size: 16px;
+      margin: 0 0 14px
+    }
+
+    .wide {
+      margin-bottom: 16px
+    }
+
+    .actions {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      padding: 12px 9px;
+      border-bottom: 1px solid var(--line)
+    }
+
+    .table th {
+      color: var(--muted);
+      font-weight: 500
+    }
+
+    .table tr:last-child td {
+      border: 0
+    }
+
+    .status {
+      color: var(--accent)
+    }
+
+    .refbox {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px
+    }
+
+    .refbox input {
+      flex: 1;
+      min-width: 0;
+      background: #0b1220;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 11px;
+      color: var(--text)
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 18px 0
+    }
+
+    .hidden {
+      display: none !important
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #263c54;
+      display: grid;
+      place-items: center;
+      font-weight: 800
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #18392f;
+      border: 1px solid #2c6a54;
+      padding: 12px 17px;
+      border-radius: 11px;
+      display: none;
+      box-shadow: 0 10px 30px #0008
+    }
+
+    .admin-note {
+      border: 1px solid #725b34;
+      background: #302718;
+      color: #f2d59a;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      margin-bottom: 16px
+    }
+
+    @media(max-width:800px) {
+      .layout {
+        grid-template-columns: 1fr
+      }
+
+      .side {
+        position: static
+      }
+
+      .nav {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .grid {
+        grid-template-columns: 1fr
+      }
+
+      .wrap {
+        padding: 15px
+      }
+
+      .top {
+        margin-bottom: 18px
+      }
+
+      .table {
+        min-width: 560px
+      }
+
+      .table-wrap {
+        overflow: auto
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">У</div><span>Условное название</span><span class="pill">DEMO</span>
+      </div>
+      <div id="topUser" class="profile hidden">
+        <div class="avatar" id="topAvatar">U</div><span id="topName"></span><button class="secondary"
+          id="logoutBtn">Выйти</button>
+      </div>
+    </header>
+
+    <section id="authView" class="auth">
+      <div class="pill">ДЕМО-СРЕДА · ВИРТУАЛЬНЫЕ СРЕДСТВА</div>
+      <h1 id="authTitle">Вход в аккаунт</h1>
+      <p id="authSubtitle">Введите данные, чтобы открыть демонстрационный кабинет.</p>
+      <form id="authForm">
+        <label class="field hidden" id="nameField"><span>Имя</span><input id="nameInput" autocomplete="name"
+            placeholder="Как к вам обращаться"></label>
+        <label class="field"><span>Email</span><input id="emailInput" type="email" autocomplete="email" required
+            placeholder="name@example.com"></label>
+        <label class="field"><span>Пароль</span><input id="passwordInput" type="password" minlength="4"
+            autocomplete="current-password" required placeholder="Не менее 4 символов"></label>
+        <button class="full" id="authSubmit">Войти</button>
+      </form>
+      <div class="switch"><span id="switchText">Нет аккаунта?</span> <button class="link"
+          id="switchMode">Зарегистрироваться</button></div>
+      <div class="notice">Это локальный прототип: аккаунты и баланс хранятся только в этом браузере. Реальные платежи и
+        переводы отключены. Не используйте настоящие пароли.</div>
+    </section>
+
+    <section id="appView" class="layout hidden">
+      <aside class="side">
+        <div class="nav">
+          <button class="active" data-page="overview">▦ Обзор</button>
+          <button data-page="shop">🛒 Магазин</button>
+          <button data-page="referrals">♧ Рефералы</button>
+          <button data-page="transactions">↕ Операции</button>
+          <button data-page="profile">◎ Профиль</button>
+          <button data-page="admin">⚙ Демо-админ</button>
+        </div>
+        <div class="side-foot">Все суммы условные.<br>Демо-режим без реальных денег.</div>
+      </aside>
+      <main>
+        <div id="page-overview">
+          <h1>Обзор</h1>
+          <p class="sub">Сводка вашего демонстрационного аккаунта</p>
+          <div class="grid">
+            <div class="card">
+              <div class="metric-label">Виртуальный баланс</div>
+              <div class="metric" id="balanceMetric">₽ 0</div>
+              <div class="muted">Учебные единицы</div>
+            </div>
+            <div class="card">
+              <div class="metric-label">Приглашённые участники</div>
+              <div class="metric" id="refMetric">0</div>
+              <div class="muted">По вашей ссылке</div>
+            </div>
+            <div class="card">
+              <div class="metric-label">Демо-начисления</div>
+              <div class="metric positive" id="earnedMetric">₽ 0</div>
+              <div class="muted">Не являются доходом</div>
+            </div>
+          </div>
+          <div class="card wide">
+            <div class="row">
+              <div>
+                <h2 class="section-title">Быстрые действия</h2>
+                <div class="muted">Попробуйте функции без реальных платежей</div>
+              </div>
+            </div>
+            <div class="actions" style="margin-top:16px"><button id="demoAdd">Добавить 1 000 демо-ед.</button><button
+                class="secondary" id="demoSpend">Списать 250 демо-ед.</button></div>
+          </div>
+          <div class="card wide">
+            <h2 class="section-title">Последние операции</h2>
+            <div id="recentTable"></div>
+          </div>
+        </div>
+        <div id="page-shop" class="hidden">
+          <h1>Магазин</h1>
+          <p class="sub">
+            Покупайте игровые предметы за виртуальные монеты
+          </p>
+
+          <div id="shopGrid" class="grid"></div>
+        </div>
+        <div id="page-referrals" class="hidden">
+          <h1>Реферальная программа</h1>
+          <p class="sub">Приглашайте тестовых пользователей в демонстрационную среду</p>
+          <div class="card wide">
+            <h2 class="section-title">Ваша пригласительная ссылка</h2>
+            <div class="muted">Ссылка нужна только для тестирования регистрации.</div>
+            <div class="refbox"><input id="refLink" readonly><button id="copyRef">Копировать</button></div>
+          </div>
+          <div class="card wide">
+            <h2 class="section-title">Приглашённые пользователи</h2>
+            <div id="refList"></div>
+          </div>
+        </div>
+        <div id="page-transactions" class="hidden">
+          <h1>Операции</h1>
+          <p class="sub">История виртуальных зачислений и списаний</p>
+          <div class="card table-wrap">
+            <div id="allTable"></div>
+          </div>
+        </div>
+        <div id="page-profile" class="hidden">
+          <h1>Профиль</h1>
+          <p class="sub">Данные демонстрационного аккаунта</p>
+          <div class="card" style="max-width:620px">
+            <div class="profile">
+              <div class="avatar" id="profileAvatar">U</div>
+              <div><b id="profileName"></b>
+                <div class="muted" id="profileEmail"></div>
+              </div>
+            </div>
+            <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+            <div class="row"><span class="muted">Дата создания</span><span id="createdAt"></span></div>
+            <div class="row" style="margin-top:12px"><span class="muted">ID аккаунта</span><span id="profileId"></span>
+            </div>
+          </div>
+        </div>
+        <div id="page-admin" class="hidden">
+          <h1>Демо-администрирование</h1>
+          <p class="sub">Инструменты для проверки интерфейса на локальных данных</p>
+          <div class="admin-note">Административные функции доступны только в демонстрационном интерфейсе. Здесь нет
+            реального управления платежами или чужими счетами.</div>
+          <div class="grid">
+            <div class="card">
+              <div class="metric-label">Аккаунтов в браузере</div>
+              <div class="metric" id="usersCount">0</div>
+            </div>
+            <div class="card">
+              <div class="metric-label">Всего виртуальных единиц</div>
+              <div class="metric" id="totalVirtual">0</div>
+            </div>
+            <div class="card">
+              <div class="metric-label">Операций</div>
+              <div class="metric" id="opsCount">0</div>
+            </div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">Данные прототипа</h2><button class="danger" id="resetData">Сбросить локальные
+              данные</button>
+          </div>
+        </div>
+      </main>
+    </section>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script>
+    const API = "";
+
+    let currentUser = null;
+    let demo = { balance: 0, earned: 0, transactions: [] };
+
+    const TOKEN_KEY = "demo_fintech_token";
+
+    async function request(url, options = {}) {
+      const response = await fetch(API + url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
+      });
+
+      const text = await response.text();
+      let result = {};
+
+      try {
+        result = JSON.parse(text);
+      } catch {
+        result = { message: text };
+      }
+
+      if (!response.ok) {
+        throw new Error(result.message || text || "Ошибка запроса");
+      }
+
+      return result;
+    }
+
+    function toast(message) {
+      const element = document.getElementById("toast");
+      element.textContent = message;
+      element.style.display = "block";
+
+      setTimeout(() => {
+        element.style.display = "none";
+      }, 2500);
+    }
+
+    function money(value) {
+      return "₽ " + Number(value || 0).toLocaleString("ru-RU");
+    }
+
+    function saveDemo() {
+      localStorage.setItem(
+        "demo_data_" + currentUser.id,
+        JSON.stringify(demo)
+      );
+    }
+
+    function loadDemo() {
+      const saved = localStorage.getItem(
+        "demo_data_" + currentUser.id
+      );
+
+      demo = saved
+        ? JSON.parse(saved)
+        : { balance: 0, earned: 0, transactions: [] };
+    }
+
+    function showApp() {
+      document.getElementById("authView").classList.add("hidden");
+      document.getElementById("appView").classList.remove("hidden");
+      document.getElementById("topUser").classList.remove("hidden");
+
+      loadDemo();
+      render();
+    }
+
+    function render() {
+      const u = currentUser;
+
+      document.getElementById("topName").textContent = u.name;
+      document.getElementById("topAvatar").textContent =
+        u.name[0].toUpperCase();
+
+      document.getElementById("balanceMetric").textContent =
+        money(demo.balance);
+
+      document.getElementById("refMetric").textContent = "0";
+      document.getElementById("earnedMetric").textContent =
+        money(demo.earned);
+
+      document.getElementById("recentTable").innerHTML =
+        createTable(demo.transactions.slice(0, 5));
+
+      document.getElementById("allTable").innerHTML =
+        createTable(demo.transactions);
+
+      document.getElementById("refList").innerHTML =
+        '<div class="empty">Реферальная система будет подключена отдельно.</div>';
+
+      document.getElementById("refLink").value =
+        "Пока недоступно";
+
+      document.getElementById("profileName").textContent = u.name;
+      document.getElementById("profileEmail").textContent = u.email;
+
+      document.getElementById("profileAvatar").textContent =
+        u.name[0].toUpperCase();
+
+      document.getElementById("createdAt").textContent =
+        new Date(u.created_at).toLocaleDateString("ru-RU");
+
+      document.getElementById("profileId").textContent = u.id;
+
+      document.getElementById("usersCount").textContent = "—";
+      document.getElementById("totalVirtual").textContent = "—";
+      document.getElementById("opsCount").textContent =
+        demo.transactions.length;
+    }
+
+    function createTable(rows) {
+      if (!rows.length) {
+        return '<div class="empty">Операций пока нет</div>';
+      }
+
+      return `
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Дата</th>
+        <th>Тип</th>
+        <th>Описание</th>
+        <th>Сумма</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(t => `
+      <tr>
+        <td>${new Date(t.date).toLocaleString("ru-RU")}</td>
+        <td>${t.type}</td>
+        <td>${t.description}</td>
+        <td>${t.amount >= 0 ? "+" : ""}${money(t.amount)}</td>
+      </tr>
+      `).join("")}
+    </tbody>
+  </table>
+  `;
+    }
+
+    // Регистрация и вход
+
+    let mode = "login";
+
+    function setMode(value) {
+      mode = value;
+
+      document.getElementById("authTitle").textContent =
+        mode === "login" ? "Вход в аккаунт" : "Создание аккаунта";
+
+      document.getElementById("authSubtitle").textContent =
+        mode === "login"
+          ? "Введите данные для входа."
+          : "Создайте демонстрационный аккаунт.";
+
+      document.getElementById("nameField").classList.toggle(
+        "hidden", mode === "login"
+      );
+
+      document.getElementById("nameInput").required =
+        mode === "register";
+
+      document.getElementById("authSubmit").textContent =
+        mode === "login" ? "Войти" : "Зарегистрироваться";
+
+      document.getElementById("switchText").textContent =
+        mode === "login" ? "Нет аккаунта?" : "Уже зарегистрированы?";
+
+      document.getElementById("switchMode").textContent =
+        mode === "login" ? "Зарегистрироваться" : "Войти";
+    }
+
+    document.getElementById("switchMode").onclick = () => {
+      setMode(mode === "login" ? "register" : "login");
+    };
+
+    document.getElementById("authForm").onsubmit = async (event) => {
+      event.preventDefault();
+
+      const body = {
+        name: document.getElementById("nameInput").value.trim(),
+        email: document.getElementById("emailInput").value.trim(),
+        password: document.getElementById("passwordInput").value
+      };
+
+      try {
+        const endpoint = mode === "login"
+          ? "/api/login"
+          : "/api/register";
+
+        const result = await request(endpoint, {
+          method: "POST",
+          body: JSON.stringify(body)
+        });
+
+        localStorage.setItem(TOKEN_KEY, result.token);
+        currentUser = result.user;
+
+        showApp();
+        toast(mode === "login" ? "Вы вошли в аккаунт" : "Аккаунт создан");
+
+      } catch (error) {
+        toast(error.message);
+      }
+    };
+
+    // Проверка авторизации
+
+    async function checkAuth() {
+      const token = localStorage.getItem(TOKEN_KEY);
+
+      if (!token) return;
+
+      try {
+        currentUser = await request("/api/me", {
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+
+        showApp();
+
+        const wallet = await request("/api/wallet", {
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+
+        demo.balance = wallet.balance;
+
+        demo.transactions = wallet.transactions.map(t => ({
+          type: t.type,
+          amount: t.amount,
+          description: t.description,
+          date: t.created_at
+        }));
+
+        render();
+
+      } catch {
+        localStorage.removeItem(TOKEN_KEY);
+      }
+    }
+
+    // Выход
+
+    document.getElementById("logoutBtn").onclick = () => {
+      localStorage.removeItem(TOKEN_KEY);
+      currentUser = null;
+
+      document.getElementById("appView").classList.add("hidden");
+      document.getElementById("topUser").classList.add("hidden");
+      document.getElementById("authView").classList.remove("hidden");
+
+      document.getElementById("passwordInput").value = "";
+    };
+
+    // Навигация
+
+    document.querySelectorAll(".nav button").forEach(button => {
+      button.onclick = () => {
+        document.querySelectorAll(".nav button").forEach(b =>
+          b.classList.remove("active")
+        );
+
+        button.classList.add("active");
+
+        document.querySelectorAll("main > div").forEach(page =>
+          page.classList.add("hidden")
+        );
+
+        document.getElementById(
+          "page-" + button.dataset.page
+        ).classList.remove("hidden");
+      };
+    });
+
+    // Демонстрационные виртуальные операции
+
+    function addTransaction(type, amount, description) {
+      demo.transactions.unshift({
+        type,
+        amount,
+        description,
+        date: new Date().toISOString()
+      });
+
+      saveDemo();
+      render();
+    }
+
+
+    document.getElementById("demoAdd").onclick = async () => {
+      const button = document.getElementById("demoAdd");
+      button.disabled = true;
+
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+
+        const result = await request("/api/wallet/demo-add", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+
+        const wallet = await request("/api/wallet", {
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+
+        demo.balance = wallet.balance;
+
+        demo.transactions = wallet.transactions.map(t => ({
+          type: t.type,
+          amount: t.amount,
+          description: t.description,
+          date: t.created_at
+        }));
+
+        render();
+
+        toast("Начислено 1 000 виртуальных монет");
+
+        console.log("Баланс PostgreSQL:", result.balance);
+
+      } catch (error) {
+        toast("Ошибка: " + error.message);
+      } finally {
+        button.disabled = false;
+      }
+    };
+
+
+    document.getElementById("demoSpend").onclick = async () => {
+      const button = document.getElementById("demoSpend");
+      button.disabled = true;
+
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+
+        await request("/api/wallet/demo-spend", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+
+        const wallet = await request("/api/wallet", {
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        });
+
+        demo.balance = wallet.balance;
+
+        demo.transactions = wallet.transactions.map(t => ({
+          type: t.type,
+          amount: t.amount,
+          description: t.description,
+          date: t.created_at
+        }));
+
+        render();
+        toast("Списано 250 виртуальных монет");
+
+      } catch (error) {
+        toast("Ошибка: " + error.message);
+      } finally {
+        button.disabled = false;
+      }
+    };
+    document.getElementById("copyRef").onclick = () => {
+      toast("Реферальная система пока не подключена");
+    };
+
+    document.getElementById("resetData").onclick = () => {
+      if (confirm("Удалить локальные демо-данные?")) {
+        demo = {
+          balance: 0,
+          earned: 0,
+          transactions: []
+        };
+
+        saveDemo();
+        render();
+        toast("Демо-данные сброшены");
+      }
+    };
+
+
+    async function loadShop() {
+      const grid = document.getElementById("shopGrid");
+      grid.textContent = "Загрузка магазина...";
+
+      try {
+        const items = await request("/api/shop/items");
+        grid.replaceChildren();
+
+        for (const item of items) {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          card.innerHTML = `
+        <h2 class="section-title"></h2>
+        <p class="muted"></p>
+        <p class="muted"></p>
+        <h3></h3>
+        <button>Купить</button>
+      `;
+
+          card.children[0].textContent = item.name;
+          card.children[1].textContent = item.description;
+          card.children[2].textContent = "Редкость: " + item.rarity;
+          card.children[3].textContent =
+            item.price.toLocaleString("ru-RU") + " монет";
+
+          const button = card.querySelector("button");
+
+          button.onclick = async () => {
+            button.disabled = true;
+
+            try {
+              const token = localStorage.getItem(TOKEN_KEY);
+
+              if (!token) {
+                throw new Error("Необходимо войти в аккаунт");
+              }
+
+              await request("/api/shop/buy", {
+                method: "POST",
+                headers: {
+                  Authorization: "Bearer " + token
+                },
+                body: JSON.stringify({
+                  item_id: item.id
+                })
+              });
+
+              const wallet = await request("/api/wallet", {
+                headers: {
+                  Authorization: "Bearer " + token
+                }
+              });
+
+              demo.balance = wallet.balance;
+
+              demo.transactions = wallet.transactions.map(t => ({
+                type: t.type,
+                amount: t.amount,
+                description: t.description,
+                date: t.created_at
+              }));
+
+              render();
+
+              button.textContent = "Куплено";
+              toast("Предмет приобретён: " + item.name);
+
+            } catch (error) {
+              toast("Ошибка: " + error.message);
+              button.disabled = false;
+            }
+          };
+
+          grid.appendChild(card);
+        }
+
+      } catch (error) {
+        grid.textContent = "Ошибка загрузки: " + error.message;
+      }
+    }
+
+    document
+      .querySelector('[data-page="shop"]')
+      .addEventListener("click", loadShop);
+
+
+    setMode("login");
+    checkAuth();
+  </script>
+</body>
+
+</html>
