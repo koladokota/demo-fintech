@@ -33,22 +33,30 @@ func TestShopInventoryReturnsPurchasedItem(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
-
 	userID := "test-user-" + time.Now().Format("20060102150405.000000000")
 	itemID := "test-item-" + time.Now().Format("20060102150405.000000000")
 	token := "test-token-" + userID
+	t.Cleanup(func() {
+		// Cleanup is registered before the pool close; cleanup data first, then close connections.
+		if _, err := db.Exec(ctx, `DELETE FROM user_inventory WHERE user_id = $1`, userID); err != nil {
+			t.Errorf("cleanup user_inventory: %v", err)
+		}
+		if _, err := db.Exec(ctx, `DELETE FROM sessions WHERE user_id = $1`, userID); err != nil {
+			t.Errorf("cleanup sessions: %v", err)
+		}
+		if _, err := db.Exec(ctx, `DELETE FROM users WHERE id = $1`, userID); err != nil {
+			t.Errorf("cleanup users: %v", err)
+		}
+		if _, err := db.Exec(ctx, `DELETE FROM shop_items WHERE id = $1`, itemID); err != nil {
+			t.Errorf("cleanup shop_items: %v", err)
+		}
+		db.Close()
+	})
+
 	_, err = db.Exec(ctx, `INSERT INTO users (id, name, email, password_hash) VALUES ($1, 'Inventory Test', $2, 'test')`, userID, userID+"@example.test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() {
-		// Remove children before parents so cleanup also works if the test fails.
-		_, _ = db.Exec(ctx, `DELETE FROM user_inventory WHERE user_id = $1`, userID)
-		_, _ = db.Exec(ctx, `DELETE FROM sessions WHERE user_id = $1`, userID)
-		_, _ = db.Exec(ctx, `DELETE FROM users WHERE id = $1`, userID)
-		_, _ = db.Exec(ctx, `DELETE FROM shop_items WHERE id = $1`, itemID)
-	})
 	_, err = db.Exec(ctx, `INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, NOW() + interval '1 hour')`, hashToken(token), userID)
 	if err != nil {
 		t.Fatal(err)

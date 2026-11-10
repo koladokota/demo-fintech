@@ -822,12 +822,21 @@
           }
         });
 
-        showApp();
-        await loadWallet();
-        await loadInventory();
-
       } catch {
         localStorage.removeItem(TOKEN_KEY);
+        return;
+      }
+
+      showApp();
+      try {
+        await loadWallet();
+      } catch (error) {
+        toast("Не удалось загрузить кошелёк: " + error.message);
+      }
+      try {
+        await loadInventory();
+      } catch (error) {
+        toast("Не удалось загрузить инвентарь: " + error.message);
       }
     }
 
