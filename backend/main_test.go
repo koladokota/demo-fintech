@@ -42,7 +42,13 @@ func TestShopInventoryReturnsPurchasedItem(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Exec(ctx, `DELETE FROM users WHERE id = $1`, userID)
+	t.Cleanup(func() {
+		// Remove children before parents so cleanup also works if the test fails.
+		_, _ = db.Exec(ctx, `DELETE FROM user_inventory WHERE user_id = $1`, userID)
+		_, _ = db.Exec(ctx, `DELETE FROM sessions WHERE user_id = $1`, userID)
+		_, _ = db.Exec(ctx, `DELETE FROM users WHERE id = $1`, userID)
+		_, _ = db.Exec(ctx, `DELETE FROM shop_items WHERE id = $1`, itemID)
+	})
 	_, err = db.Exec(ctx, `INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ($1, $2, NOW() + interval '1 hour')`, hashToken(token), userID)
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +57,6 @@ func TestShopInventoryReturnsPurchasedItem(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Exec(ctx, `DELETE FROM shop_items WHERE id = $1`, itemID)
 	_, err = db.Exec(ctx, `INSERT INTO user_inventory (user_id, item_id) VALUES ($1, $2)`, userID, itemID)
 	if err != nil {
 		t.Fatal(err)

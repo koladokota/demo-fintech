@@ -782,6 +782,7 @@
         currentUser = result.user;
 
         showApp();
+        await loadWallet();
         toast(mode === "login" ? "Вы вошли в аккаунт" : "Аккаунт создан");
 
       } catch (error) {
@@ -790,6 +791,24 @@
     };
 
     // Проверка авторизации
+
+    async function loadWallet() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) return;
+
+      const wallet = await request("/api/wallet", {
+        headers: { Authorization: "Bearer " + token }
+      });
+
+      demo.balance = wallet.balance;
+      demo.transactions = wallet.transactions.map(t => ({
+        type: t.type,
+        amount: t.amount,
+        description: t.description,
+        date: t.created_at
+      }));
+      render();
+    }
 
     async function checkAuth() {
       const token = localStorage.getItem(TOKEN_KEY);
@@ -804,23 +823,8 @@
         });
 
         showApp();
-
-        const wallet = await request("/api/wallet", {
-          headers: {
-            Authorization: "Bearer " + token
-          }
-        });
-
-        demo.balance = wallet.balance;
-
-        demo.transactions = wallet.transactions.map(t => ({
-          type: t.type,
-          amount: t.amount,
-          description: t.description,
-          date: t.created_at
-        }));
-
-        render();
+        await loadWallet();
+        await loadInventory();
 
       } catch {
         localStorage.removeItem(TOKEN_KEY);
@@ -889,22 +893,7 @@
           }
         });
 
-        const wallet = await request("/api/wallet", {
-          headers: {
-            Authorization: "Bearer " + token
-          }
-        });
-
-        demo.balance = wallet.balance;
-
-        demo.transactions = wallet.transactions.map(t => ({
-          type: t.type,
-          amount: t.amount,
-          description: t.description,
-          date: t.created_at
-        }));
-
-        render();
+        await loadWallet();
 
         toast("Начислено 1 000 виртуальных монет");
 
@@ -932,22 +921,7 @@
           }
         });
 
-        const wallet = await request("/api/wallet", {
-          headers: {
-            Authorization: "Bearer " + token
-          }
-        });
-
-        demo.balance = wallet.balance;
-
-        demo.transactions = wallet.transactions.map(t => ({
-          type: t.type,
-          amount: t.amount,
-          description: t.description,
-          date: t.created_at
-        }));
-
-        render();
+        await loadWallet();
         toast("Списано 250 виртуальных монет");
 
       } catch (error) {
@@ -1033,22 +1007,7 @@
                 })
               });
 
-              const wallet = await request("/api/wallet", {
-                headers: {
-                  Authorization: "Bearer " + token
-                }
-              });
-
-              demo.balance = wallet.balance;
-
-              demo.transactions = wallet.transactions.map(t => ({
-                type: t.type,
-                amount: t.amount,
-                description: t.description,
-                date: t.created_at
-              }));
-
-              render();
+              await loadWallet();
               await loadInventory();
               button.textContent = "Уже куплено";
               button.disabled = true;
