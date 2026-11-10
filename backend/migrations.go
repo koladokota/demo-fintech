@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func runMigrations(ctx context.Context, db *pgxpool.Pool) error {
@@ -12,10 +15,46 @@ func runMigrations(ctx context.Context, db *pgxpool.Pool) error {
 	if path == "" {
 		path = "migrations"
 	}
-	data, err := os.ReadFile(filepath.Join(path, "001_initial.sql"))
+	if _, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(ctx, string(data))
-	return err
+	files := make([]string, 0)
+	for _, entry := range entries {
+		if !entry.IsDir() && filepath.Ext(entry.Name()) == ".sql" {
+			files = append(files, entry.Name())
+		}
+	}
+	sort.Strings(files)
+	for _, file := range files {
+		var applied bool
+		if err := db.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM schema_migrations WHERE version=$1)`, file).Scan(&applied); err != nil {
+			return err
+		}
+		if applied {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(path, file))
+		if err != nil {
+			return err
+		}
+		tx, err := db.Begin(ctx)
+		if err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, string(data)); err == nil {
+			_, err = tx.Exec(ctx, `INSERT INTO schema_migrations(version) VALUES($1)`, file)
+		}
+		if err != nil {
+			_ = tx.Rollback(ctx)
+			return fmt.Errorf("migration %s: %w", file, err)
+		}
+		if err = tx.Commit(ctx); err != nil {
+			return fmt.Errorf("migration %s commit: %w", file, err)
+		}
+	}
+	return nil
 }

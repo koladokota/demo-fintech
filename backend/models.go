@@ -32,3 +32,11 @@ type ShopItem struct {
 	Rarity      string `json:"rarity"`
 	Icon        string `json:"icon"`
 }
+type InventoryItem struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Rarity      string    `json:"rarity"`
+	Icon        string    `json:"icon"`
+	PurchasedAt time.Time `json:"purchased_at"`
+}

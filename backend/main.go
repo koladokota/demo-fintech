@@ -36,6 +36,7 @@ func main() {
 	mux.Handle("/api/wallet/demo-add", auth(http.HandlerFunc(h.DemoAdd)))
 	mux.Handle("/api/wallet/demo-spend", auth(http.HandlerFunc(h.DemoSpend)))
 	mux.HandleFunc("/api/shop/items", h.ShopItems)
+	mux.Handle("/api/shop/inventory", auth(http.HandlerFunc(h.ShopInventory)))
 	mux.Handle("/api/shop/buy", auth(http.HandlerFunc(h.ShopBuy)))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {

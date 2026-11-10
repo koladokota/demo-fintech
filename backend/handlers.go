@@ -3,8 +3,26 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 )
+
+// App is retained as a small compatibility adapter for existing package tests.
+type App struct{ db *pgxpool.Pool }
+
+func (a *App) shopInventory(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Authorization") == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	s := &Service{repo: &Repository{db: a.db}}
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	auth := s.RequireAuth(http.HandlerFunc((&Handler{s: s}).ShopInventory))
+	auth.ServeHTTP(w, r)
+}
 
 type Handler struct{ s *Service }
 
@@ -113,6 +131,19 @@ func (h *Handler) ShopItems(w http.ResponseWriter, r *http.Request) {
 	items, err := h.s.repo.ShopItems(r.Context())
 	if err != nil {
 		http.Error(w, "Database error", 500)
+		return
+	}
+	jsonResponse(w, items)
+}
+
+func (h *Handler) ShopInventory(w http.ResponseWriter, r *http.Request) {
+	if !method(w, r, http.MethodGet) {
+		return
+	}
+	u, _ := userFromContext(r.Context())
+	items, err := h.s.repo.Inventory(r.Context(), u.ID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	jsonResponse(w, items)

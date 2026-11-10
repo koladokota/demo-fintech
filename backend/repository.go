@@ -84,6 +84,23 @@ func (r *Repository) ShopItems(ctx context.Context) ([]ShopItem, error) {
 	}
 	return items, rows.Err()
 }
+
+func (r *Repository) Inventory(ctx context.Context, userID string) ([]InventoryItem, error) {
+	rows, err := r.db.Query(ctx, `SELECT i.id,i.name,i.description,i.rarity,i.icon,ui.purchased_at FROM user_inventory ui JOIN shop_items i ON i.id=ui.item_id WHERE ui.user_id=$1 ORDER BY ui.purchased_at DESC,ui.id DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := make([]InventoryItem, 0)
+	for rows.Next() {
+		var item InventoryItem
+		if err := rows.Scan(&item.ID, &item.Name, &item.Description, &item.Rarity, &item.Icon, &item.PurchasedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
 func (r *Repository) Buy(ctx context.Context, userID, itemID string) (int64, error) {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {

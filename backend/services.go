@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/jackc/pgx/v5"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
 )
@@ -77,6 +77,6 @@ func (s *Service) SpendDemo(ctx context.Context, userID string) (int64, error) {
 	return s.repo.ChangeBalance(ctx, userID, -250, "demo-spend", "Тестовое списание")
 }
 
-var errInvalidInput = pgx.ErrNoRows
-var errUnauthorized = pgx.ErrNoRows
-var errDemoDisabled = pgx.ErrNoRows
+var errInvalidInput = errors.New("invalid input")
+var errUnauthorized = errors.New("unauthorized")
+var errDemoDisabled = errors.New("demo credits disabled")
