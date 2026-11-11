@@ -31,6 +31,13 @@ func main() {
 	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) { jsonResponse(w, map[string]string{"status": "ok"}) })
 	mux.HandleFunc("/api/register", h.Register)
 	mux.HandleFunc("/api/login", h.Login)
+	mux.Handle("/api/logout", auth(http.HandlerFunc(h.Logout)))
+	mux.HandleFunc("/api/features", func(w http.ResponseWriter, r *http.Request) {
+		if !method(w, r, http.MethodGet) {
+			return
+		}
+		jsonResponse(w, map[string]bool{"demo_credits_enabled": cfg.DemoCredits})
+	})
 	mux.Handle("/api/me", auth(http.HandlerFunc(h.Me)))
 	mux.Handle("/api/wallet", auth(http.HandlerFunc(h.Wallet)))
 	mux.Handle("/api/wallet/demo-add", auth(http.HandlerFunc(h.DemoAdd)))

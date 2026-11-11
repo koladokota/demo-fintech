@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Условное название — демо-платформа</title>
+  <title>ROCKET X — игровой кабинет</title>
   <style>
     :root {
       --bg: #090d16;
@@ -424,7 +424,7 @@
   <div class="wrap">
     <header class="top">
       <div class="brand">
-        <div class="logo">У</div><span>Условное название</span><span class="pill">DEMO</span>
+        <div class="logo">RX</div><span>ROCKET X</span><span class="pill">DEMO</span>
       </div>
       <div id="topUser" class="profile hidden">
         <div class="avatar" id="topAvatar">U</div><span id="topName"></span><button class="secondary"
@@ -441,14 +441,13 @@
             placeholder="Как к вам обращаться"></label>
         <label class="field"><span>Email</span><input id="emailInput" type="email" autocomplete="email" required
             placeholder="name@example.com"></label>
-        <label class="field"><span>Пароль</span><input id="passwordInput" type="password" minlength="4"
-            autocomplete="current-password" required placeholder="Не менее 4 символов"></label>
+        <label class="field"><span>Пароль</span><input id="passwordInput" type="password" minlength="1"
+            autocomplete="current-password" required placeholder="Введите пароль"></label>
         <button class="full" id="authSubmit">Войти</button>
       </form>
       <div class="switch"><span id="switchText">Нет аккаунта?</span> <button class="link"
           id="switchMode">Зарегистрироваться</button></div>
-      <div class="notice">Это локальный прототип: аккаунты и баланс хранятся только в этом браузере. Реальные платежи и
-        переводы отключены. Не используйте настоящие пароли.</div>
+      <div class="notice">Это тестовая версия. Аккаунты, баланс и покупки хранятся в PostgreSQL. Все монеты виртуальные, реальные платежи отсутствуют. Для тестирования используйте отдельный пароль.</div>
     </section>
 
     <section id="appView" class="layout hidden">
@@ -458,10 +457,8 @@
           <button data-page="shop">🛒 Магазин</button>
           <button data-page="inventory">🎒 Инвентарь</button>
           <button data-page="games">🎮 Игры</button>
-          <button data-page="referrals">♧ Рефералы</button>
           <button data-page="transactions">↕ Операции</button>
           <button data-page="profile">◎ Профиль</button>
-          <button data-page="admin">⚙ Демо-админ</button>
         </div>
         <div class="side-foot">Все суммы условные.<br>Демо-режим без реальных денег.</div>
       </aside>
@@ -472,18 +469,18 @@
           <div class="grid">
             <div class="card">
               <div class="metric-label">Виртуальный баланс</div>
-              <div class="metric" id="balanceMetric">₽ 0</div>
-              <div class="muted">Учебные единицы</div>
+              <div class="metric" id="balanceMetric">0 монет</div>
+              <div class="muted">Только внутриигровые монеты</div>
             </div>
             <div class="card">
-              <div class="metric-label">Приглашённые участники</div>
-              <div class="metric" id="refMetric">0</div>
-              <div class="muted">По вашей ссылке</div>
+              <div class="metric-label">Уровень игрока</div>
+              <div class="metric" id="levelMetric">—</div>
+              <div class="muted" id="levelMetricHint">Опыт загружается</div>
             </div>
             <div class="card">
-              <div class="metric-label">Демо-начисления</div>
-              <div class="metric positive" id="earnedMetric">₽ 0</div>
-              <div class="muted">Не являются доходом</div>
+              <div class="metric-label">Приобретено предметов</div>
+              <div class="metric positive" id="inventoryMetric">—</div>
+              <div class="muted">Покупки сохраняются в инвентаре</div>
             </div>
           </div>
           <div class="card wide">
@@ -493,8 +490,11 @@
                 <div class="muted">Попробуйте функции без реальных платежей</div>
               </div>
             </div>
-            <div class="actions" style="margin-top:16px"><button id="demoAdd">Добавить 1 000 демо-ед.</button><button
-                class="secondary" id="demoSpend">Списать 250 демо-ед.</button></div>
+            <div id="demoActions" class="actions hidden" style="margin-top:16px">
+              <button id="demoAdd">Добавить 1 000 тестовых монет</button>
+              <button class="secondary" id="demoSpend">Списать 250 тестовых монет</button>
+            </div>
+            <p class="muted" id="demoActionsNotice" style="margin-top:14px">Тестовые операции недоступны в обычном режиме.</p>
           </div>
           <div class="card wide">
             <h2 class="section-title">Последние операции</h2>
@@ -537,19 +537,6 @@
             <p id="numberGameHint" style="margin-top:16px" aria-live="polite"></p>
           </div>
         </div>
-        <div id="page-referrals" class="hidden">
-          <h1>Реферальная программа</h1>
-          <p class="sub">Приглашайте тестовых пользователей в демонстрационную среду</p>
-          <div class="card wide">
-            <h2 class="section-title">Ваша пригласительная ссылка</h2>
-            <div class="muted">Ссылка нужна только для тестирования регистрации.</div>
-            <div class="refbox"><input id="refLink" readonly><button id="copyRef">Копировать</button></div>
-          </div>
-          <div class="card wide">
-            <h2 class="section-title">Приглашённые пользователи</h2>
-            <div id="refList"></div>
-          </div>
-        </div>
         <div id="page-transactions" class="hidden">
           <h1>Операции</h1>
           <p class="sub">История виртуальных зачислений и списаний</p>
@@ -583,30 +570,6 @@
             <button id="claimDailyXP" class="secondary" style="margin-top:12px">Получить +25 XP</button>
           </div>
         </div>
-        <div id="page-admin" class="hidden">
-          <h1>Демо-администрирование</h1>
-          <p class="sub">Инструменты для проверки интерфейса на локальных данных</p>
-          <div class="admin-note">Административные функции доступны только в демонстрационном интерфейсе. Здесь нет
-            реального управления платежами или чужими счетами.</div>
-          <div class="grid">
-            <div class="card">
-              <div class="metric-label">Аккаунтов в браузере</div>
-              <div class="metric" id="usersCount">0</div>
-            </div>
-            <div class="card">
-              <div class="metric-label">Всего виртуальных единиц</div>
-              <div class="metric" id="totalVirtual">0</div>
-            </div>
-            <div class="card">
-              <div class="metric-label">Операций</div>
-              <div class="metric" id="opsCount">0</div>
-            </div>
-          </div>
-          <div class="card">
-            <h2 class="section-title">Данные прототипа</h2><button class="danger" id="resetData">Сбросить локальные
-              данные</button>
-          </div>
-        </div>
       </main>
     </section>
   </div>
@@ -615,8 +578,9 @@
     const API = "";
 
     let currentUser = null;
-    let demo = { balance: 0, earned: 0, transactions: [] };
+    let demo = { balance: 0, transactions: [] };
     let inventory = [];
+    let playerProgress = null;
 
     const TOKEN_KEY = "demo_fintech_token";
     const PAGE_KEY_PREFIX = "demo_fintech_page_";
@@ -661,24 +625,7 @@
     }
 
     function money(value) {
-      return "₽ " + Number(value || 0).toLocaleString("ru-RU");
-    }
-
-    function saveDemo() {
-      localStorage.setItem(
-        "demo_data_" + currentUser.id,
-        JSON.stringify(demo)
-      );
-    }
-
-    function loadDemo() {
-      const saved = localStorage.getItem(
-        "demo_data_" + currentUser.id
-      );
-
-      demo = saved
-        ? JSON.parse(saved)
-        : { balance: 0, earned: 0, transactions: [] };
+      return Number(value || 0).toLocaleString("ru-RU") + " монет";
     }
 
     function showApp() {
@@ -686,8 +633,11 @@
       document.getElementById("appView").classList.remove("hidden");
       document.getElementById("topUser").classList.remove("hidden");
 
-      loadDemo();
+      demo = { balance: 0, transactions: [] };
+      inventory = [];
+      playerProgress = null;
       render();
+      loadFeatures().catch(() => {});
 
       const pageKey = PAGE_KEY_PREFIX + currentUser.id;
       const savedPage = sessionStorage.getItem(pageKey) || "overview";
@@ -706,21 +656,18 @@
       document.getElementById("balanceMetric").textContent =
         money(demo.balance);
 
-      document.getElementById("refMetric").textContent = "0";
-      document.getElementById("earnedMetric").textContent =
-        money(demo.earned);
+      document.getElementById("levelMetric").textContent =
+        playerProgress ? String(playerProgress.level) : "—";
+      document.getElementById("levelMetricHint").textContent =
+        playerProgress ? playerProgress.total_xp + " XP всего" : "Опыт загружается";
+      document.getElementById("inventoryMetric").textContent =
+        Array.isArray(inventory) ? String(inventory.length) : "—";
 
       document.getElementById("recentTable").innerHTML =
         createTable(demo.transactions.slice(0, 5));
 
       document.getElementById("allTable").innerHTML =
         createTable(demo.transactions);
-
-      document.getElementById("refList").innerHTML =
-        '<div class="empty">Реферальная система будет подключена отдельно.</div>';
-
-      document.getElementById("refLink").value =
-        "Пока недоступно";
 
       document.getElementById("profileName").textContent = u.name;
       document.getElementById("profileEmail").textContent = u.email;
@@ -733,10 +680,12 @@
 
       document.getElementById("profileId").textContent = u.id;
 
-      document.getElementById("usersCount").textContent = "—";
-      document.getElementById("totalVirtual").textContent = "—";
-      document.getElementById("opsCount").textContent =
-        demo.transactions.length;
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"\x27]/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "\x27": "&#39;"
+      }[char]));
     }
 
     function createTable(rows) {
@@ -757,9 +706,9 @@
     <tbody>
       ${rows.map(t => `
       <tr>
-        <td>${new Date(t.date).toLocaleString("ru-RU")}</td>
-        <td>${t.type}</td>
-        <td>${t.description}</td>
+        <td>${escapeHTML(new Date(t.date).toLocaleString("ru-RU"))}</td>
+        <td>${escapeHTML(t.type)}</td>
+        <td>${escapeHTML(t.description)}</td>
         <td>${t.amount >= 0 ? "+" : ""}${money(t.amount)}</td>
       </tr>
       `).join("")}
@@ -789,6 +738,9 @@
 
       document.getElementById("nameInput").required =
         mode === "register";
+      const password = document.getElementById("passwordInput");
+      password.minLength = mode === "register" ? 8 : 1;
+      password.placeholder = mode === "register" ? "Не менее 8 символов" : "Введите пароль";
 
       document.getElementById("authSubmit").textContent =
         mode === "login" ? "Войти" : "Зарегистрироваться";
@@ -813,6 +765,8 @@
         password: document.getElementById("passwordInput").value
       };
 
+      const submit = document.getElementById("authSubmit");
+      submit.disabled = true;
       try {
         const endpoint = mode === "login"
           ? "/api/login"
@@ -827,16 +781,32 @@
         currentUser = result.user;
 
         showApp();
-        await loadWallet();
-        await loadProgress();
         toast(mode === "login" ? "Вы вошли в аккаунт" : "Аккаунт создан");
-
+        await refreshAccountData();
       } catch (error) {
         toast(error.message);
+      } finally {
+        submit.disabled = false;
       }
     };
 
     // Проверка авторизации
+
+    async function loadFeatures() {
+      const flags = await request("/api/features");
+      const enabled = flags.demo_credits_enabled === true;
+      document.getElementById("demoActions").classList.toggle("hidden", !enabled);
+      document.getElementById("demoActionsNotice").textContent = enabled
+        ? "Режим разработки: операции меняют виртуальный баланс в PostgreSQL."
+        : "Тестовые операции недоступны в обычном режиме.";
+    }
+
+    async function refreshAccountData() {
+      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress()]);
+      if (results.some(result => result.status === "rejected")) {
+        toast("Часть данных не загрузилась. Попробуйте обновить страницу.");
+      }
+    }
 
     async function loadWallet() {
       const token = localStorage.getItem(TOKEN_KEY);
@@ -878,37 +848,41 @@
       }
 
       showApp();
-      try {
-        await loadWallet();
-      } catch (error) {
-        toast("Не удалось загрузить кошелёк: " + error.message);
-      }
-      try {
-        await loadInventory();
-      } catch (error) {
-        toast("Не удалось загрузить инвентарь: " + error.message);
-      }
-      try {
-        await loadProgress();
-      } catch (error) {
-        toast("Не удалось загрузить уровень: " + error.message);
-      }
+      await refreshAccountData();
     }
 
     // Выход
 
-    document.getElementById("logoutBtn").onclick = () => {
+    document.getElementById("logoutBtn").onclick = async () => {
+      const button = document.getElementById("logoutBtn");
+      button.disabled = true;
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) {
+        try {
+          await request("/api/logout", {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token }
+          });
+        } catch (error) {
+          if (error.status !== 401) {
+            toast("Не удалось отозвать сессию на сервере. Проверьте соединение.");
+          }
+        }
+      }
       if (currentUser) {
         sessionStorage.removeItem(PAGE_KEY_PREFIX + currentUser.id);
       }
       localStorage.removeItem(TOKEN_KEY);
       currentUser = null;
-
+      demo = { balance: 0, transactions: [] };
+      inventory = [];
+      playerProgress = null;
+      numberGame = null;
       document.getElementById("appView").classList.add("hidden");
       document.getElementById("topUser").classList.add("hidden");
       document.getElementById("authView").classList.remove("hidden");
-
       document.getElementById("passwordInput").value = "";
+      button.disabled = false;
     };
 
     // Навигация
@@ -936,19 +910,6 @@
     });
 
     // Демонстрационные виртуальные операции
-
-    function addTransaction(type, amount, description) {
-      demo.transactions.unshift({
-        type,
-        amount,
-        description,
-        date: new Date().toISOString()
-      });
-
-      saveDemo();
-      render();
-    }
-
 
     document.getElementById("demoAdd").onclick = async () => {
       const button = document.getElementById("demoAdd");
@@ -1001,25 +962,6 @@
         button.disabled = false;
       }
     };
-    document.getElementById("copyRef").onclick = () => {
-      toast("Реферальная система пока не подключена");
-    };
-
-    document.getElementById("resetData").onclick = () => {
-      if (confirm("Удалить локальные демо-данные?")) {
-        demo = {
-          balance: 0,
-          earned: 0,
-          transactions: []
-        };
-
-        saveDemo();
-        render();
-        toast("Демо-данные сброшены");
-      }
-    };
-
-
     async function loadShop() {
       const grid = document.getElementById("shopGrid");
       grid.textContent = "Загрузка магазина...";
@@ -1030,6 +972,7 @@
           request("/api/shop/inventory", { headers: { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) } })
         ]);
         inventory = owned;
+        render();
         grid.replaceChildren();
 
         for (const item of items) {
@@ -1070,22 +1013,20 @@
 
               await request("/api/shop/buy", {
                 method: "POST",
-                headers: {
-                  Authorization: "Bearer " + token
-                },
-                body: JSON.stringify({
-                  item_id: item.id
-                })
+                headers: { Authorization: "Bearer " + token },
+                body: JSON.stringify({ item_id: item.id })
               });
-
-              await loadWallet();
-              await loadInventory();
               button.textContent = "Уже куплено";
               button.disabled = true;
+              card.classList.add("owned");
               toast("Предмет приобретён: " + item.name);
 
+              const updates = await Promise.allSettled([loadWallet(), loadInventory()]);
+              if (updates.some(update => update.status === "rejected")) {
+                toast("Покупка прошла, но данные не обновились. Перезагрузите страницу.");
+              }
             } catch (error) {
-              toast("Ошибка: " + error.message);
+              toast("Ошибка покупки: " + error.message);
               button.disabled = false;
             }
           };
@@ -1109,6 +1050,7 @@
         inventory = await request("/api/shop/inventory", {
           headers: { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) }
         });
+        render();
         grid.replaceChildren();
         if (!inventory.length) {
           grid.innerHTML = '<div class="empty">Пока нет приобретённых предметов</div>';
@@ -1140,6 +1082,8 @@
       const progress = await request("/api/progression", {
         headers: { Authorization: "Bearer " + token }
       });
+      playerProgress = progress;
+      render();
 
       document.getElementById("playerLevel").textContent = "Уровень " + progress.level;
       document.getElementById("playerXP").textContent =
@@ -1183,6 +1127,7 @@
       const controls = document.getElementById("numberGameControls");
 
       start.disabled = active;
+      document.getElementById("sendNumberGuess").disabled = !active;
       start.textContent = active ? "Игра идёт" : (game.status === "none" ? "Играть" : "Новая игра");
       controls.classList.toggle("hidden", !active);
 
