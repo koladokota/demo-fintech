@@ -53,6 +53,8 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, errInvalidInput) {
 			http.Error(w, "Invalid name, email or password (minimum 8 characters)", 400)
+		} else if errors.Is(err, errInvalidReferral) {
+			http.Error(w, "Referral code not found", http.StatusBadRequest)
 		} else if errors.Is(err, errConflict) {
 			http.Error(w, "Email may already be registered", 409)
 		} else {
