@@ -370,6 +370,7 @@
     let authMode = "login";
     let walletDemoEnabled = false;
     let walletBalance = null;
+    let walletTransferPending = false;
     let activeWalletTab = "";
     let toastHandle;
 
@@ -687,6 +688,7 @@
     }
 
     async function submitWalletOperation(kind) {
+      if (walletTransferPending) return;
       if (!walletDemoEnabled) {
         el("walletActionStatus").textContent = "Операция недоступна вне демонстрационного режима.";
         return;
@@ -703,7 +705,9 @@
         el("walletActionStatus").textContent = "Недостаточно виртуальных монет.";
         return;
       }
-      submit.disabled = true;
+      walletTransferPending = true;
+      el("walletDepositSubmit").disabled = true;
+      el("walletWithdrawSubmit").disabled = true;
       try {
         const beforeUser = currentUser?.id;
         const result = await api("/api/wallet/demo-transfer", {
@@ -726,7 +730,9 @@
           ? "Недостаточно виртуальных монет."
           : "Не удалось выполнить тестовую операцию: " + error.message;
       } finally {
-        submit.disabled = !walletDemoEnabled;
+        walletTransferPending = false;
+        el("walletDepositSubmit").disabled = !walletDemoEnabled;
+        el("walletWithdrawSubmit").disabled = !walletDemoEnabled;
       }
     }
 
