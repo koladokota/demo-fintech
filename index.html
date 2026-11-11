@@ -1344,10 +1344,23 @@
     }
 
     function setWalletBalance(balance) {
+      const changed = walletBalance !== null && Number(walletBalance) !== Number(balance);
       walletBalance = balance;
-      el("walletHeaderBalance").textContent = Number(balance).toLocaleString("ru-RU");
+      const header = el("walletHeaderBalance");
+      header.textContent = Number(balance).toLocaleString("ru-RU");
       for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
         el(id).textContent = coins(balance);
+      }
+      // Brief feedback when an operation changes the balance, not on initial load.
+      if (changed && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        for (const node of [header, el("walletBalance")]) {
+          node.classList.remove("balance-pop");
+          void node.offsetWidth;
+          node.classList.add("balance-pop");
+          node.addEventListener("animationend", () => {
+            node.classList.remove("balance-pop");
+          }, { once: true });
+        }
       }
     }
 
