@@ -21,6 +21,17 @@ func (r *Repository) FindUserByEmail(ctx context.Context, email string) (User, s
 	err := r.db.QueryRow(ctx, `SELECT id,name,email,password_hash,created_at FROM users WHERE email=$1`, email).Scan(&u.ID, &u.Name, &u.Email, &hash, &u.CreatedAt)
 	return u, hash, err
 }
+func (r *Repository) RevokeSession(ctx context.Context, userID, tokenHash string) error {
+	tag, err := r.db.Exec(ctx, `DELETE FROM sessions WHERE user_id=$1 AND token_hash=$2`, userID, tokenHash)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return pgx.ErrNoRows
+	}
+	return nil
+}
+
 func (r *Repository) CreateSession(ctx context.Context, userID, tokenHash string) error {
 	_, err := r.db.Exec(ctx, `INSERT INTO sessions(token_hash,user_id,expires_at) VALUES($1,$2,$3)`, tokenHash, userID, time.Now().Add(24*time.Hour))
 	return err
