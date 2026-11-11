@@ -48,6 +48,8 @@ func main() {
 	mux.Handle("/api/shop/buy", auth(http.HandlerFunc(h.ShopBuy)))
 	mux.Handle("/api/progression", auth(http.HandlerFunc(h.Progression)))
 	mux.Handle("/api/progression/check-in", auth(http.HandlerFunc(h.DailyCheckIn)))
+	mux.Handle("/api/missions", auth(http.HandlerFunc(h.Missions)))
+	mux.Handle("/api/missions/claim", auth(http.HandlerFunc(h.MissionClaim)))
 	mux.Handle("/api/game/start", auth(http.HandlerFunc(h.NumberGameStart)))
 	mux.Handle("/api/game/current", auth(http.HandlerFunc(h.NumberGameCurrent)))
 	mux.Handle("/api/game/guess", auth(http.HandlerFunc(h.NumberGameGuess)))

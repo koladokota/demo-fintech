@@ -538,6 +538,7 @@
       <aside class="side">
         <div class="nav">
           <button class="active" data-page="overview">▦ Обзор</button>
+          <button data-page="missions">◈ Миссии</button>
           <button data-page="shop">🛒 Магазин</button>
           <button data-page="inventory">🎒 Инвентарь</button>
           <button data-page="games">🎮 Игры</button>
@@ -570,6 +571,15 @@
           <div class="card wide">
             <div class="row">
               <div>
+                <h2 class="section-title">Миссии и награды</h2>
+                <div class="muted" id="missionsPreview">Загрузка заданий...</div>
+              </div>
+              <button class="secondary" id="openMissions">Смотреть миссии</button>
+            </div>
+          </div>
+          <div class="card wide">
+            <div class="row">
+              <div>
                 <h2 class="section-title">Быстрые действия</h2>
                 <div class="muted">Попробуйте функции без реальных платежей</div>
               </div>
@@ -583,6 +593,20 @@
           <div class="card wide">
             <h2 class="section-title">Последние операции</h2>
             <div id="recentTable"></div>
+          </div>
+        </div>
+        <div id="page-missions" class="hidden">
+          <h1>Миссии</h1>
+          <p class="sub">Зарабатывай виртуальные монеты за действия на сайте. Награды подтверждает сервер.</p>
+          <div class="card wide">
+            <div class="row">
+              <h2 class="section-title" style="margin:0">Твои задания</h2>
+              <span class="muted" id="missionSummary">Загрузка...</span>
+            </div>
+            <div id="missionList" style="margin-top:14px;display:grid;gap:12px"></div>
+            <p class="muted" style="margin-top:16px;font-size:12px">
+              Ежедневная миссия обновляется в 00:00 UTC. Остальные награды доступны один раз за аккаунт.
+            </p>
           </div>
         </div>
         <div id="page-shop" class="hidden">
@@ -689,6 +713,7 @@
     let demo = { balance: 0, transactions: [] };
     let inventory = [];
     let playerProgress = null;
+    let missions = [];
     let selectedAvatarKey = "initial";
 
     const TOKEN_KEY = "demo_fintech_token";
@@ -756,7 +781,9 @@
       demo = { balance: 0, transactions: [] };
       inventory = [];
       playerProgress = null;
+      missions = [];
       render();
+      renderMissions();
       loadFeatures().catch(() => {});
 
       const pageKey = PAGE_KEY_PREFIX + currentUser.id;
@@ -922,11 +949,124 @@
     }
 
     async function refreshAccountData() {
-      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress(), loadProfile()]);
+      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress(), loadProfile(), loadMissions()]);
       if (results.some(result => result.status === "rejected")) {
         toast("Часть данных не загрузилась. Попробуйте обновить страницу.");
       }
     }
+
+
+    function renderMissions() {
+      const ready = missions.filter(m => m.completed && !m.claimed).length;
+      const claimed = missions.filter(m => m.claimed).length;
+      document.getElementById("missionsPreview").textContent =
+        missions.length
+          ? claimed + " из " + missions.length + " наград получено" +
+            (ready ? " · Доступно к получению: " + ready : "")
+          : "Загрузка заданий...";
+      document.getElementById("missionSummary").textContent =
+        claimed + " из " + missions.length + " наград получено";
+
+      const container = document.getElementById("missionList");
+      container.replaceChildren();
+      if (!missions.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "Загрузка заданий...";
+        container.appendChild(empty);
+        return;
+      }
+      for (const mission of missions) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.style.background = "var(--panel2)";
+
+        const head = document.createElement("div");
+        head.className = "row";
+        const info = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = mission.title;
+        const desc = document.createElement("p");
+        desc.className = "muted";
+        desc.style.margin = "5px 0";
+        desc.textContent = mission.description;
+        info.append(title, desc);
+        const reward = document.createElement("strong");
+        reward.className = "positive";
+        reward.style.whiteSpace = "nowrap";
+        reward.textContent = "+" + mission.reward_coins + " монет";
+        head.append(info, reward);
+        card.appendChild(head);
+
+        const footer = document.createElement("div");
+        footer.className = "row";
+        footer.style.marginTop = "12px";
+        const status = document.createElement("span");
+        status.className = "muted";
+        status.textContent = mission.claimed ? "Награда получена"
+          : mission.completed ? "Задание выполнено" : "Не выполнено";
+        const button = document.createElement("button");
+        button.className = "secondary";
+        if (mission.claimed) {
+          button.textContent = "Получено";
+          button.disabled = true;
+        } else if (mission.completed) {
+          button.textContent = "Забрать награду";
+          button.onclick = () => claimMission(mission.id, button);
+        } else {
+          button.textContent = mission.id === "first_purchase" ? "В магазин" : "В профиль";
+          button.onclick = () => document.querySelector(
+            '[data-page="' + (mission.id === "first_purchase" ? "shop" : "profile") + '"]'
+          ).click();
+        }
+        footer.append(status, button);
+        card.appendChild(footer);
+        container.appendChild(card);
+      }
+    }
+
+    async function loadMissions() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token || !currentUser) return;
+      const data = await request("/api/missions", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (!Array.isArray(data)) throw new Error("Некорректный ответ сервера");
+      missions = data;
+      renderMissions();
+    }
+
+    async function claimMission(id, button) {
+      button.disabled = true;
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const result = await request("/api/missions/claim", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token },
+          body: JSON.stringify({ mission_id: id })
+        });
+        const completed = missions.find(m => m.id === id);
+        if (completed) completed.claimed = true;
+        renderMissions();
+        toast("Получено +" + result.coins_awarded + " виртуальных монет");
+        const updates = await Promise.allSettled([loadWallet(), loadMissions()]);
+        if (updates.some(u => u.status === "rejected")) {
+          toast("Награда начислена, но данные не обновились. Перезагрузи страницу.");
+        }
+      } catch (error) {
+        toast("Не удалось получить награду: " + error.message);
+        await loadMissions().catch(() => {});
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    document.getElementById("openMissions").onclick = () => {
+      document.querySelector('[data-page="missions"]').click();
+    };
+    document.querySelector('[data-page="missions"]').addEventListener("click", () => {
+      loadMissions().catch(error => toast("Ошибка загрузки миссий: " + error.message));
+    });
 
     async function loadWallet() {
       const token = localStorage.getItem(TOKEN_KEY);
@@ -998,6 +1138,7 @@
       inventory = [];
       playerProgress = null;
       numberGame = null;
+      missions = [];
       document.getElementById("appView").classList.add("hidden");
       document.getElementById("topUser").classList.add("hidden");
       document.getElementById("authView").classList.remove("hidden");
@@ -1141,7 +1282,7 @@
               card.classList.add("owned");
               toast("Предмет приобретён: " + item.name);
 
-              const updates = await Promise.allSettled([loadWallet(), loadInventory()]);
+              const updates = await Promise.allSettled([loadWallet(), loadInventory(), loadMissions()]);
               if (updates.some(update => update.status === "rejected")) {
                 toast("Покупка прошла, но данные не обновились. Перезагрузите страницу.");
               }
@@ -1228,7 +1369,7 @@
           headers: { Authorization: "Bearer " + token }
         });
         await loadProgress();
-        await loadProfile();
+        await Promise.allSettled([loadProfile(), loadMissions()]);
         toast("Получено 25 XP!");
       } catch (error) {
         toast("Не удалось получить XP: " + error.message);
