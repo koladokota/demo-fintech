@@ -368,6 +368,9 @@
     let game = null;
     let selectedAvatar = "initial";
     let authMode = "login";
+    let walletDemoEnabled = false;
+    let walletBalance = null;
+    let activeWalletTab = "";
     let toastHandle;
 
     function el(id) { return document.getElementById(id); }
@@ -433,7 +436,11 @@
         });
       }
       if (page === "profile") {
-        loadProfile().catch(error => toast("Не удалось загрузить профиль: " + error.message));
+        Promise.allSettled([loadProfile(), loadWalletData()]).then(results => {
+          if (results.some(result => result.status === "rejected")) {
+            toast("Не удалось загрузить часть данных профиля. Проверь соединение.");
+          }
+        });
       }
       if (page === "referrals") {
         loadReferrals().catch(error => toast("Не удалось загрузить рефералов: " + error.message));
@@ -523,6 +530,11 @@
       localStorage.removeItem(TOKEN_KEY);
       currentUser = null;
       game = null;
+      walletDemoEnabled = false;
+      walletBalance = null;
+      el("walletBalance").textContent = "—";
+      el("walletHistory").replaceChildren();
+      setWalletTab("");
       el("appView").classList.add("hidden");
       el("topUser").classList.add("hidden");
       el("authView").classList.remove("hidden");
