@@ -28,7 +28,7 @@ func TestWalletPagesAreIndependentOfProfile(t *testing.T) {
 	for _, match := range matches {
 		tabs = append(tabs, match[1])
 	}
-	if want := []string{"games", "profile", "referrals"}; !reflect.DeepEqual(tabs, want) {
+	if want := []string{"games", "profile", "stats", "referrals"}; !reflect.DeepEqual(tabs, want) {
 		t.Fatalf("main navigation = %v; want %v", tabs, want)
 	}
 
@@ -42,22 +42,48 @@ func TestWalletPagesAreIndependentOfProfile(t *testing.T) {
 		}
 	}
 
-	// Inline wallet forms must not be nested within the profile section.
+	// Wallet, statistics and settings occupy independent sections.
 	profileStart := strings.Index(html, `id="page-profile"`)
+	statsStart := strings.Index(html, `id="page-stats"`)
+	settingsStart := strings.Index(html, `id="page-settings"`)
 	depositStart := strings.Index(html, `id="page-deposit"`)
 	withdrawStart := strings.Index(html, `id="page-withdraw"`)
 	referralsStart := strings.Index(html, `id="page-referrals"`)
-	if profileStart < 0 || depositStart <= profileStart || withdrawStart <= depositStart || referralsStart <= withdrawStart {
-		t.Fatal("wallet screens not separated into their own sections")
+	if profileStart < 0 || statsStart <= profileStart || settingsStart <= statsStart ||
+		depositStart <= settingsStart || withdrawStart <= depositStart || referralsStart <= withdrawStart {
+		t.Fatal("wallet, statistics and settings screens are not separate")
 	}
-	profile := html[profileStart:depositStart]
-	if !strings.Contains(profile, `id="walletBalance"`) {
-		t.Fatal("profile balance was removed")
-	}
-	for _, forbidden := range []string{"walletDepositForm", "walletWithdrawForm", "walletDepositPanel", "walletWithdrawPanel"} {
-		if strings.Contains(profile, forbidden) {
-			t.Errorf("profile still includes inline wallet form %q", forbidden)
+	profile := html[profileStart:statsStart]
+	stats := html[statsStart:settingsStart]
+	settings := html[settingsStart:depositStart]
+	for _, expected := range []string{
+		`id="profileAvatar"`, `id="profileName"`, `id="walletBalance"`,
+		`id="walletHistory"`, `class="profile-layout"`, `class="card activity-card"`,
+		`id="openProfileSettings"`,
+	} {
+		if !strings.Contains(profile, expected) {
+			t.Errorf("profile missing expected element %q", expected)
 		}
+	}
+	for _, forbidden := range []string{"walletDepositForm", "walletWithdrawForm", "walletDepositPanel",
+		"walletWithdrawPanel", "profileSettingsForm", "profileStats", "profileAchievements",
+		"playerXP", "claimDailyXP", `<h1>Профиль</h1>`} {
+		if strings.Contains(profile, forbidden) {
+			t.Errorf("profile still contains unwanted element %q", forbidden)
+		}
+	}
+	for _, expected := range []string{`id="profileStats"`, `id="playerLevel"`, `id="claimDailyXP"`} {
+		if !strings.Contains(stats, expected) {
+			t.Errorf("stats page is missing %q", expected)
+		}
+	}
+	for _, expected := range []string{`id="profileSettingsForm"`, `id="avatarChoices"`, `id="profileNameInput"`} {
+		if !strings.Contains(settings, expected) {
+			t.Errorf("settings page missing %q", expected)
+		}
+	}
+	if strings.Contains(html, `id="profileAchievements"`) {
+		t.Error("achievements should not be visible in the minimalist UI")
 	}
 
 	ids := regexp.MustCompile(`id="([^"]+)"`).FindAllStringSubmatch(html, -1)
