@@ -42,6 +42,7 @@ func main() {
 	mux.Handle("/api/profile", auth(http.HandlerFunc(h.Profile)))
 	mux.Handle("/api/referrals", auth(http.HandlerFunc(h.Referrals)))
 	mux.Handle("/api/wallet", auth(http.HandlerFunc(h.Wallet)))
+	mux.Handle("/api/wallet/demo-transfer", auth(http.HandlerFunc(h.DemoWalletTransfer)))
 	mux.Handle("/api/wallet/demo-add", auth(http.HandlerFunc(h.DemoAdd)))
 	mux.Handle("/api/wallet/demo-spend", auth(http.HandlerFunc(h.DemoSpend)))
 	mux.HandleFunc("/api/shop/items", h.ShopItems)
