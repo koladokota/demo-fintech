@@ -1228,6 +1228,7 @@
           headers: { Authorization: "Bearer " + token }
         });
         await loadProgress();
+        await loadProfile();
         toast("Получено 25 XP!");
       } catch (error) {
         toast("Не удалось получить XP: " + error.message);
@@ -1445,6 +1446,7 @@
             ? "Правильно! Получено +" + numberGame.xp_awarded + " XP."
             : "Правильно! Сегодня награда за игру уже получена.";
           loadProgress().catch(() => {});
+          loadProfile().catch(() => {});
         } else if (numberGame.status === "lost") {
           numberGameFeedback = "Игра окончена. Попробуй ещё раз!";
         } else {
