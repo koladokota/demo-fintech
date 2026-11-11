@@ -482,17 +482,15 @@
       el("topName").textContent = user.name;
       el("topAvatar").textContent = avatarIcon(user.avatar_key, user.name);
       el("profileName").textContent = user.name;
-      el("profileEmail").textContent = user.email;
       el("profileAvatar").textContent = avatarIcon(user.avatar_key, user.name);
-      el("createdAt").textContent = "В проекте с " +
-        new Date(user.created_at).toLocaleDateString("ru-RU");
     }
 
     function changePage(name) {
-      const page = ["games", "profile", "referrals", "deposit", "withdraw"].includes(name) ? name : "games";
+      const page = ["games", "profile", "stats", "referrals", "settings", "deposit", "withdraw"].includes(name) ? name : "games";
       const walletPage = page === "deposit" || page === "withdraw";
+      const profileSubpage = walletPage || page === "settings";
       document.querySelectorAll(".tabs button").forEach(button => {
-        const active = button.dataset.page === page || (walletPage && button.dataset.page === "profile");
+        const active = button.dataset.page === page || (profileSubpage && button.dataset.page === "profile");
         button.classList.toggle("active", active);
         button.setAttribute("aria-current", button.dataset.page === page ? "page" : "false");
       });
@@ -520,6 +518,9 @@
       if (walletPage) {
         loadWalletData().catch(error => toast("Не удалось загрузить баланс: " + error.message));
       }
+      if (page === "stats" || page === "settings") {
+        loadProfile().catch(error => toast("Не удалось загрузить данные аккаунта: " + error.message));
+      }
       if (page === "referrals") {
         loadReferrals().catch(error => toast("Не удалось загрузить рефералов: " + error.message));
       }
@@ -532,6 +533,8 @@
     el("openWalletWithdraw").onclick = () => changePage("withdraw");
     el("backFromDeposit").onclick = () => changePage("profile");
     el("backFromWithdraw").onclick = () => changePage("profile");
+    el("openProfileSettings").onclick = () => changePage("settings");
+    el("backFromSettings").onclick = () => changePage("profile");
 
     function showApp() {
       el("authView").classList.add("hidden");
@@ -861,22 +864,6 @@
       }
     }
 
-    function renderAchievements(items) {
-      const root = el("profileAchievements");
-      root.replaceChildren();
-      const visible = new Set(["first_win", "five_wins", "level_two", "three_checkins"]);
-      for (const achievement of items.filter(item => visible.has(item.id))) {
-        const node = document.createElement("div");
-        node.className = "achievement" + (achievement.unlocked ? "" : " locked");
-        const title = document.createElement("strong");
-        title.textContent = (achievement.unlocked ? "✓ " : "○ ") + achievement.title;
-        const description = document.createElement("span");
-        description.textContent = achievement.description;
-        node.append(title, description);
-        root.appendChild(node);
-      }
-    }
-
     async function loadProfile() {
       const [profile, progress] = await Promise.all([
         api("/api/profile", { headers: authHeaders() }),
@@ -894,7 +881,6 @@
       el("claimDailyXP").disabled = progress.claimed_today;
       el("claimDailyXP").textContent = progress.claimed_today ? "Сегодня получено" : "Получить XP";
       renderStats(profile.stats);
-      renderAchievements(profile.achievements);
     }
 
     el("profileNameInput").addEventListener("input", () => {
