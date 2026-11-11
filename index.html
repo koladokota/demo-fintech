@@ -112,6 +112,22 @@
     .identity strong { font-size: 19px; }
     .identity .muted { font-size: 13px; word-break: break-word; }
     .divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+    .wallet-balance { margin: 8px 0 14px; font-size: clamp(28px, 5vw, 38px); font-weight: 800; line-height: 1.2; letter-spacing: -.025em; }
+    .wallet-tabs { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
+    .wallet-tabs button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    .wallet-panel { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 14px; background: #10141c; }
+    .wallet-panel .field { margin: 13px 0; }
+    .wallet-panel .input { max-width: 260px; }
+    .wallet-notice { font-size: 12px; color: var(--muted); margin-top: 12px; }
+    .wallet-history { margin: 6px 0 0; padding: 0; list-style: none; }
+    .wallet-history li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding: 10px 0; }
+    .wallet-history li:last-child { border-bottom: 0; }
+    .wallet-history-label { display: flex; flex-direction: column; min-width: 0; }
+    .wallet-history-label strong { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+    .wallet-history-label time { font-size: 11px; color: var(--muted); }
+    .wallet-history-amount { font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .wallet-history-amount.positive { color: var(--accent); }
+    .wallet-history-amount.negative { color: var(--muted); }
     progress { width: 100%; height: 12px; accent-color: var(--accent); }
     .avatar-choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 20px; }
     .avatar-choice {
@@ -236,6 +252,53 @@
                 </div>
               </div>
               <hr class="divider">
+              <div class="wallet">
+                <span class="hint">Игровой баланс</span>
+                <div class="wallet-balance" id="walletBalance" role="status">—</div>
+                <p class="hint">Виртуальные монеты, не имеющие денежной стоимости.</p>
+                <div class="wallet-tabs" role="tablist" aria-label="Операции с балансом">
+                  <button class="button secondary" type="button" id="walletDepositTab" role="tab"
+                    aria-selected="false" aria-controls="walletDepositPanel">Пополнить</button>
+                  <button class="button secondary" type="button" id="walletWithdrawTab" role="tab"
+                    aria-selected="false" aria-controls="walletWithdrawPanel">Вывести</button>
+                </div>
+                <div class="wallet-panel hidden" id="walletDepositPanel" role="tabpanel" aria-labelledby="walletDepositTab">
+                  <h2>Пополнение баланса</h2>
+                  <form id="walletDepositForm">
+                    <label class="field">
+                      <span class="field-label">Количество виртуальных монет</span>
+                      <input class="input" id="walletDepositAmount" type="number" min="1" max="100000"
+                        step="1" value="1000" required inputmode="numeric">
+                    </label>
+                    <button class="button" id="walletDepositSubmit" type="submit" disabled>Начислить монеты</button>
+                  </form>
+                  <p class="wallet-notice" id="walletDepositNotice">
+                    Только демонстрационное пополнение; реальные платежи не принимаются.
+                  </p>
+                </div>
+                <div class="wallet-panel hidden" id="walletWithdrawPanel" role="tabpanel" aria-labelledby="walletWithdrawTab">
+                  <h2>Вывод баланса</h2>
+                  <form id="walletWithdrawForm">
+                    <label class="field">
+                      <span class="field-label">Количество виртуальных монет</span>
+                      <input class="input" id="walletWithdrawAmount" type="number" min="1" max="100000"
+                        step="1" value="250" required inputmode="numeric">
+                    </label>
+                    <button class="button secondary" id="walletWithdrawSubmit" type="submit" disabled>Списать монеты</button>
+                  </form>
+                  <p class="wallet-notice" id="walletWithdrawNotice">
+                    Демонстрационное списание монет. Перевод денег на карту или счёт не выполняется.
+                  </p>
+                </div>
+                <p class="hint" id="walletActionStatus" role="status" style="margin-top:12px"></p>
+                <div style="margin-top:22px">
+                  <h2>Последние операции</h2>
+                  <ul id="walletHistory" class="wallet-history">
+                    <li class="hint">Загрузка...</li>
+                  </ul>
+                </div>
+              </div>
+              <hr class="divider">
               <div class="row">
                 <strong id="playerLevel">Уровень 1</strong>
                 <span id="playerXP" class="hint">0 / 100 XP</span>
@@ -305,6 +368,10 @@
     let game = null;
     let selectedAvatar = "initial";
     let authMode = "login";
+    let walletDemoEnabled = false;
+    let walletBalance = null;
+    let walletTransferPending = false;
+    let activeWalletTab = "";
     let toastHandle;
 
     function el(id) { return document.getElementById(id); }
@@ -370,7 +437,11 @@
         });
       }
       if (page === "profile") {
-        loadProfile().catch(error => toast("Не удалось загрузить профиль: " + error.message));
+        Promise.allSettled([loadProfile(), loadWalletData()]).then(results => {
+          if (results.some(result => result.status === "rejected")) {
+            toast("Не удалось загрузить часть данных профиля. Проверь соединение.");
+          }
+        });
       }
       if (page === "referrals") {
         loadReferrals().catch(error => toast("Не удалось загрузить рефералов: " + error.message));
@@ -460,6 +531,11 @@
       localStorage.removeItem(TOKEN_KEY);
       currentUser = null;
       game = null;
+      walletDemoEnabled = false;
+      walletBalance = null;
+      el("walletBalance").textContent = "—";
+      el("walletHistory").replaceChildren();
+      setWalletTab("");
       el("appView").classList.add("hidden");
       el("topUser").classList.add("hidden");
       el("authView").classList.remove("hidden");
@@ -541,6 +617,132 @@
       } finally {
         button.disabled = !game || game.status !== "active";
       }
+    };
+
+    function coins(value) {
+      return Number(value).toLocaleString("ru-RU") + " монет";
+    }
+
+    function setWalletTab(kind) {
+      activeWalletTab = kind;
+      for (const key of ["deposit", "withdraw"]) {
+        const tab = el(key === "deposit" ? "walletDepositTab" : "walletWithdrawTab");
+        const panel = el(key === "deposit" ? "walletDepositPanel" : "walletWithdrawPanel");
+        const selected = kind === key;
+        tab.classList.toggle("active", selected);
+        tab.setAttribute("aria-selected", String(selected));
+        panel.classList.toggle("hidden", !selected);
+      }
+      el("walletActionStatus").textContent = "";
+    }
+
+    el("walletDepositTab").onclick = () => setWalletTab(activeWalletTab === "deposit" ? "" : "deposit");
+    el("walletWithdrawTab").onclick = () => setWalletTab(activeWalletTab === "withdraw" ? "" : "withdraw");
+
+    async function loadWalletData() {
+      if (!currentUser) return;
+      const userID = currentUser.id;
+      const [wallet, features] = await Promise.all([
+        api("/api/wallet", { headers: authHeaders() }),
+        api("/api/features")
+      ]);
+      if (!currentUser || currentUser.id !== userID) return;
+
+      walletBalance = wallet.balance;
+      walletDemoEnabled = features.demo_credits_enabled === true;
+      el("walletBalance").textContent = coins(walletBalance);
+      el("walletDepositSubmit").disabled = !walletDemoEnabled;
+      el("walletWithdrawSubmit").disabled = !walletDemoEnabled;
+      el("walletDepositNotice").textContent = walletDemoEnabled
+        ? "Тестовое начисление виртуальных монет. Реальных платежей нет."
+        : "Пополнение отключено: платёжная система не подключена. Демо-операции доступны только в режиме разработки.";
+      el("walletWithdrawNotice").textContent = walletDemoEnabled
+        ? "Тестовое списание монет. Никакого перевода денег не будет."
+        : "Вывод отключён: денежные выплаты не поддерживаются. Демо-операции доступны только в режиме разработки.";
+
+      const list = el("walletHistory");
+      list.replaceChildren();
+      const transactions = Array.isArray(wallet.transactions) ? wallet.transactions.slice(0, 5) : [];
+      if (transactions.length === 0) {
+        const empty = document.createElement("li");
+        empty.className = "hint";
+        empty.textContent = "Операций пока нет.";
+        list.appendChild(empty);
+      }
+      for (const tx of transactions) {
+        const item = document.createElement("li");
+        const left = document.createElement("div");
+        left.className = "wallet-history-label";
+        const description = document.createElement("strong");
+        description.textContent = tx.description;
+        const time = document.createElement("time");
+        time.dateTime = tx.created_at;
+        time.textContent = new Date(tx.created_at).toLocaleString("ru-RU");
+        left.append(description, time);
+        const amount = document.createElement("span");
+        amount.className = "wallet-history-amount " + (tx.amount >= 0 ? "positive" : "negative");
+        amount.textContent = (tx.amount > 0 ? "+" : "") + coins(tx.amount);
+        item.append(left, amount);
+        list.appendChild(item);
+      }
+    }
+
+    async function submitWalletOperation(kind) {
+      if (walletTransferPending) return;
+      if (!walletDemoEnabled) {
+        el("walletActionStatus").textContent = "Операция недоступна вне демонстрационного режима.";
+        return;
+      }
+      const deposit = kind === "deposit";
+      const input = el(deposit ? "walletDepositAmount" : "walletWithdrawAmount");
+      const submit = el(deposit ? "walletDepositSubmit" : "walletWithdrawSubmit");
+      const amount = Number(input.value);
+      if (!input.value.trim() || !Number.isInteger(amount) || amount < 1 || amount > 100000) {
+        el("walletActionStatus").textContent = "Укажи целое количество от 1 до 100 000 монет.";
+        return;
+      }
+      if (!deposit && walletBalance !== null && amount > walletBalance) {
+        el("walletActionStatus").textContent = "Недостаточно виртуальных монет.";
+        return;
+      }
+      walletTransferPending = true;
+      el("walletDepositSubmit").disabled = true;
+      el("walletWithdrawSubmit").disabled = true;
+      try {
+        const beforeUser = currentUser?.id;
+        const result = await api("/api/wallet/demo-transfer", {
+          method: "POST", headers: authHeaders(),
+          body: JSON.stringify({ kind, amount })
+        });
+        if (!currentUser || currentUser.id !== beforeUser) return;
+        walletBalance = result.balance;
+        el("walletBalance").textContent = coins(result.balance);
+        el("walletActionStatus").textContent = deposit
+          ? "Виртуальный баланс пополнен на " + coins(result.amount) + "."
+          : "Списано " + coins(result.amount) + ". Перевода денежных средств нет.";
+        try {
+          await loadWalletData();
+        } catch {
+          toast("Операция сохранена, но история не обновилась. Перезагрузи страницу.");
+        }
+      } catch (error) {
+        el("walletActionStatus").textContent = error.status === 409
+          ? "Недостаточно виртуальных монет."
+          : "Не удалось выполнить тестовую операцию: " + error.message;
+      } finally {
+        walletTransferPending = false;
+        el("walletDepositSubmit").disabled = !walletDemoEnabled;
+        el("walletWithdrawSubmit").disabled = !walletDemoEnabled;
+      }
+    }
+
+    el("walletDepositForm").onsubmit = event => {
+      event.preventDefault();
+      submitWalletOperation("deposit");
+    };
+    el("walletWithdrawForm").onsubmit = event => {
+      event.preventDefault();
+      submitWalletOperation("withdraw");
     };
 
     function renderAvatarChoices() {
