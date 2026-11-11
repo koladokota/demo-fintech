@@ -509,6 +509,8 @@
         shortcut.classList.toggle("active", page === kind);
         shortcut.setAttribute("aria-pressed", String(page === kind));
       }
+      el("openProfileSettings").classList.toggle("active", page === "settings");
+      el("openProfileSettings").setAttribute("aria-pressed", String(page === "settings"));
       document.querySelectorAll("main > section").forEach(node => {
         node.classList.toggle("hidden", node.id !== "page-" + page);
       });
@@ -550,7 +552,15 @@
       el("authView").classList.add("hidden");
       el("appView").classList.remove("hidden");
       el("topUser").classList.remove("hidden");
-      changePage(sessionStorage.getItem(PAGE_PREFIX + currentUser.id) || "games");
+      walletBalance = null;
+      el("walletHeaderBalance").textContent = "—";
+      const initialPage = sessionStorage.getItem(PAGE_PREFIX + currentUser.id) || "games";
+      changePage(initialPage);
+      if (!["profile", "deposit", "withdraw"].includes(initialPage)) {
+        loadWalletData().catch(error => {
+          toast("Не удалось загрузить баланс: " + error.message);
+        });
+      }
     }
 
     function setAuthMode(mode) {
@@ -627,6 +637,7 @@
       game = null;
       walletDemoEnabled = false;
       walletBalance = null;
+      el("walletHeaderBalance").textContent = "—";
       el("walletBalance").textContent = "—";
       el("walletDepositBalance").textContent = "—";
       el("walletWithdrawBalance").textContent = "—";
@@ -720,6 +731,14 @@
       return Number(value).toLocaleString("ru-RU") + " монет";
     }
 
+    function setWalletBalance(balance) {
+      walletBalance = balance;
+      el("walletHeaderBalance").textContent = Number(balance).toLocaleString("ru-RU");
+      for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
+        el(id).textContent = coins(balance);
+      }
+    }
+
     function walletStatus(kind, message) {
       el(kind === "deposit" ? "walletDepositStatus" : "walletWithdrawStatus").textContent = message;
     }
@@ -733,11 +752,8 @@
       ]);
       if (!currentUser || currentUser.id !== userID) return;
 
-      walletBalance = wallet.balance;
+      setWalletBalance(wallet.balance);
       walletDemoEnabled = features.demo_credits_enabled === true;
-      for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
-        el(id).textContent = coins(walletBalance);
-      }
       el("walletDepositSubmit").disabled = !walletDemoEnabled || walletTransferPending;
       el("walletWithdrawSubmit").disabled = !walletDemoEnabled || walletTransferPending;
       el("walletDepositNotice").textContent = walletDemoEnabled
@@ -802,10 +818,7 @@
           body: JSON.stringify({ kind, amount })
         });
         if (!currentUser || currentUser.id !== beforeUser) return;
-        walletBalance = result.balance;
-        for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
-          el(id).textContent = coins(result.balance);
-        }
+        setWalletBalance(result.balance);
         walletStatus(kind, deposit
           ? "Виртуальный баланс пополнен на " + coins(result.amount) + "."
           : "Списано " + coins(result.amount) + ". Перевода денежных средств нет.");
