@@ -5,6 +5,9 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
+	"strings"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // App is retained as a small compatibility adapter for existing package tests.
@@ -79,6 +82,28 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonResponse(w, res)
 }
+// Logout invalidates the current bearer session on the server.
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	if !method(w, r, http.MethodPost) {
+		return
+	}
+	u, ok := userFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if err := h.s.repo.RevokeSession(r.Context(), u.ID, hashToken(token)); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	if !method(w, r, http.MethodGet) {
 		return
