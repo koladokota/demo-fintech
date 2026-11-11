@@ -21,6 +21,7 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/fintech?sslmode=disable
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/fintech?sslmode=disable
     defaults:
       run:
         working-directory: backend
@@ -30,5 +31,6 @@ jobs:
         with:
           go-version-file: backend/go.mod
       - run: psql "$DATABASE_URL" -f migrations/001_initial.sql
+      - run: psql "$DATABASE_URL" -f migrations/002_progression.sql
       - run: go test ./...
       - run: go vet ./...

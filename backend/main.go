@@ -38,6 +38,8 @@ func main() {
 	mux.HandleFunc("/api/shop/items", h.ShopItems)
 	mux.Handle("/api/shop/inventory", auth(http.HandlerFunc(h.ShopInventory)))
 	mux.Handle("/api/shop/buy", auth(http.HandlerFunc(h.ShopBuy)))
+	mux.Handle("/api/progression", auth(http.HandlerFunc(h.Progression)))
+	mux.Handle("/api/progression/check-in", auth(http.HandlerFunc(h.DailyCheckIn)))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
