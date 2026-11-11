@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Условное название — демо-платформа</title>
+  <title>ROCKET X — игровой кабинет</title>
   <style>
     :root {
       --bg: #090d16;
@@ -424,7 +424,7 @@
   <div class="wrap">
     <header class="top">
       <div class="brand">
-        <div class="logo">У</div><span>Условное название</span><span class="pill">DEMO</span>
+        <div class="logo">RX</div><span>ROCKET X</span><span class="pill">DEMO</span>
       </div>
       <div id="topUser" class="profile hidden">
         <div class="avatar" id="topAvatar">U</div><span id="topName"></span><button class="secondary"
@@ -441,14 +441,13 @@
             placeholder="Как к вам обращаться"></label>
         <label class="field"><span>Email</span><input id="emailInput" type="email" autocomplete="email" required
             placeholder="name@example.com"></label>
-        <label class="field"><span>Пароль</span><input id="passwordInput" type="password" minlength="4"
-            autocomplete="current-password" required placeholder="Не менее 4 символов"></label>
+        <label class="field"><span>Пароль</span><input id="passwordInput" type="password" minlength="1"
+            autocomplete="current-password" required placeholder="Введите пароль"></label>
         <button class="full" id="authSubmit">Войти</button>
       </form>
       <div class="switch"><span id="switchText">Нет аккаунта?</span> <button class="link"
           id="switchMode">Зарегистрироваться</button></div>
-      <div class="notice">Это локальный прототип: аккаунты и баланс хранятся только в этом браузере. Реальные платежи и
-        переводы отключены. Не используйте настоящие пароли.</div>
+      <div class="notice">Это тестовая версия. Аккаунты, баланс и покупки хранятся в PostgreSQL. Все монеты виртуальные, реальные платежи отсутствуют. Для тестирования используйте отдельный пароль.</div>
     </section>
 
     <section id="appView" class="layout hidden">
@@ -458,10 +457,8 @@
           <button data-page="shop">🛒 Магазин</button>
           <button data-page="inventory">🎒 Инвентарь</button>
           <button data-page="games">🎮 Игры</button>
-          <button data-page="referrals">♧ Рефералы</button>
           <button data-page="transactions">↕ Операции</button>
           <button data-page="profile">◎ Профиль</button>
-          <button data-page="admin">⚙ Демо-админ</button>
         </div>
         <div class="side-foot">Все суммы условные.<br>Демо-режим без реальных денег.</div>
       </aside>
@@ -472,18 +469,18 @@
           <div class="grid">
             <div class="card">
               <div class="metric-label">Виртуальный баланс</div>
-              <div class="metric" id="balanceMetric">₽ 0</div>
-              <div class="muted">Учебные единицы</div>
+              <div class="metric" id="balanceMetric">0 монет</div>
+              <div class="muted">Только внутриигровые монеты</div>
             </div>
             <div class="card">
-              <div class="metric-label">Приглашённые участники</div>
-              <div class="metric" id="refMetric">0</div>
-              <div class="muted">По вашей ссылке</div>
+              <div class="metric-label">Уровень игрока</div>
+              <div class="metric" id="levelMetric">—</div>
+              <div class="muted" id="levelMetricHint">Опыт загружается</div>
             </div>
             <div class="card">
-              <div class="metric-label">Демо-начисления</div>
-              <div class="metric positive" id="earnedMetric">₽ 0</div>
-              <div class="muted">Не являются доходом</div>
+              <div class="metric-label">Приобретено предметов</div>
+              <div class="metric positive" id="inventoryMetric">—</div>
+              <div class="muted">Покупки сохраняются в инвентаре</div>
             </div>
           </div>
           <div class="card wide">
@@ -493,8 +490,11 @@
                 <div class="muted">Попробуйте функции без реальных платежей</div>
               </div>
             </div>
-            <div class="actions" style="margin-top:16px"><button id="demoAdd">Добавить 1 000 демо-ед.</button><button
-                class="secondary" id="demoSpend">Списать 250 демо-ед.</button></div>
+            <div id="demoActions" class="actions hidden" style="margin-top:16px">
+              <button id="demoAdd">Добавить 1 000 тестовых монет</button>
+              <button class="secondary" id="demoSpend">Списать 250 тестовых монет</button>
+            </div>
+            <p class="muted" id="demoActionsNotice" style="margin-top:14px">Тестовые операции недоступны в обычном режиме.</p>
           </div>
           <div class="card wide">
             <h2 class="section-title">Последние операции</h2>
@@ -537,19 +537,6 @@
             <p id="numberGameHint" style="margin-top:16px" aria-live="polite"></p>
           </div>
         </div>
-        <div id="page-referrals" class="hidden">
-          <h1>Реферальная программа</h1>
-          <p class="sub">Приглашайте тестовых пользователей в демонстрационную среду</p>
-          <div class="card wide">
-            <h2 class="section-title">Ваша пригласительная ссылка</h2>
-            <div class="muted">Ссылка нужна только для тестирования регистрации.</div>
-            <div class="refbox"><input id="refLink" readonly><button id="copyRef">Копировать</button></div>
-          </div>
-          <div class="card wide">
-            <h2 class="section-title">Приглашённые пользователи</h2>
-            <div id="refList"></div>
-          </div>
-        </div>
         <div id="page-transactions" class="hidden">
           <h1>Операции</h1>
           <p class="sub">История виртуальных зачислений и списаний</p>
@@ -581,30 +568,6 @@
             <progress id="playerXPBar" value="0" max="100" style="width:100%;height:18px;margin:14px 0"></progress>
             <p class="muted">Ежедневная активность: +25 XP один раз за календарные сутки по UTC.</p>
             <button id="claimDailyXP" class="secondary" style="margin-top:12px">Получить +25 XP</button>
-          </div>
-        </div>
-        <div id="page-admin" class="hidden">
-          <h1>Демо-администрирование</h1>
-          <p class="sub">Инструменты для проверки интерфейса на локальных данных</p>
-          <div class="admin-note">Административные функции доступны только в демонстрационном интерфейсе. Здесь нет
-            реального управления платежами или чужими счетами.</div>
-          <div class="grid">
-            <div class="card">
-              <div class="metric-label">Аккаунтов в браузере</div>
-              <div class="metric" id="usersCount">0</div>
-            </div>
-            <div class="card">
-              <div class="metric-label">Всего виртуальных единиц</div>
-              <div class="metric" id="totalVirtual">0</div>
-            </div>
-            <div class="card">
-              <div class="metric-label">Операций</div>
-              <div class="metric" id="opsCount">0</div>
-            </div>
-          </div>
-          <div class="card">
-            <h2 class="section-title">Данные прототипа</h2><button class="danger" id="resetData">Сбросить локальные
-              данные</button>
           </div>
         </div>
       </main>
