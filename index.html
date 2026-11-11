@@ -93,6 +93,31 @@
     }
     .tabs button.active { border-bottom-color: var(--accent); color: var(--text); }
     .page { max-width: 800px; padding-top: 34px; }
+    .profile-page { max-width: none; }
+    .profile-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+      align-items: start;
+      gap: 18px;
+    }
+    .profile-card { min-width: 0; }
+    .activity-card { min-width: 0; }
+    .profile-identity { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .profile-identity .identity { min-width: 0; }
+    .profile-identity .identity strong { font-size: 21px; overflow-wrap: anywhere; }
+    .icon-button {
+      flex: 0 0 auto; display: inline-grid; place-items: center; width: 38px; height: 38px;
+      background: transparent; border: 1px solid var(--border); border-radius: 11px;
+      color: var(--muted);
+    }
+    .icon-button:hover { border-color: var(--accent); color: var(--accent); }
+    .icon-button svg { width: 19px; height: 19px; fill: none; stroke: currentColor;
+      stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .wallet-summary { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+    .activity-card .wallet-history { margin-top: 4px; }
+    .activity-card .wallet-history li { gap: 8px; }
+    .activity-card .wallet-history-amount { white-space: normal; text-align: right; overflow-wrap: anywhere; }
+
     .eyebrow { color: var(--accent); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .12em; }
     h1 { margin: 8px 0; font-size: clamp(25px, 4vw, 34px); line-height: 1.25; letter-spacing: -.025em; }
     h2 { margin: 0 0 15px; font-size: 18px; }
@@ -144,11 +169,6 @@
       border: 2px solid var(--border); background: #212831; border-radius: 12px;
     }
     .avatar-choice.selected { border-color: var(--accent); background: #234039; }
-    .achievements { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .achievement { border: 1px solid var(--border); padding: 13px; border-radius: 12px; }
-    .achievement.locked { opacity: .55; }
-    .achievement strong { display: block; font-size: 14px; }
-    .achievement span { font-size: 12px; color: var(--muted); }
     .ref-count { font-size: 38px; font-weight: 800; line-height: 1.2; margin: 12px 0 4px; }
     .copy-row { display: flex; align-items: stretch; gap: 10px; margin-top: 15px; }
     .copy-row input { flex: 1; }
@@ -157,6 +177,9 @@
       border: 1px solid #3d6c60; border-radius: 12px;
       padding: 12px 16px; background: #19342d; color: var(--text); font-size: 13px;
       box-shadow: 0 14px 50px #0006;
+    }
+    @media(max-width:790px) {
+      .profile-layout { grid-template-columns: minmax(0, 1fr); }
     }
     @media(max-width:620px) {
       .shell { padding: 14px 16px 55px; }
@@ -167,12 +190,12 @@
       .button.text { padding: 5px; }
 
       .topbar { min-height: 50px; }
-      .tabs { justify-content: space-between; gap: 12px; margin-top: 18px; }
+      .tabs { justify-content: space-between; gap: 10px; margin-top: 18px; overflow-x: auto; }
+      .tabs button { flex-shrink: 0; font-size: 13px; }
       .page { padding-top: 26px; }
       .card { padding: 18px; border-radius: 14px; }
       .row { align-items: flex-start; }
       .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .achievements { grid-template-columns: 1fr; }
       .copy-row { flex-direction: column; }
       .controls { flex-wrap: wrap; }
     }
@@ -229,6 +252,7 @@
       <nav class="tabs" aria-label="Разделы">
         <button class="active" data-page="games" type="button">Игра</button>
         <button data-page="profile" type="button">Профиль</button>
+        <button data-page="stats" type="button">Статистика</button>
         <button data-page="referrals" type="button">Рефералы</button>
       </nav>
       <main>
@@ -256,33 +280,44 @@
           </div>
         </section>
 
-        <section class="page hidden" id="page-profile">
-          <div class="eyebrow">Аккаунт</div>
-          <h1>Профиль</h1>
-          <p class="section-lead">Имя, прогресс и достижения игрока.</p>
-          <div class="stack">
-            <div class="card">
-              <div class="identity">
-                <span id="profileAvatar" class="avatar big">R</span>
-                <div>
+        <section class="page profile-page hidden" id="page-profile">
+          <div class="profile-layout">
+            <div class="card profile-card">
+              <div class="profile-identity">
+                <div class="identity">
+                  <span id="profileAvatar" class="avatar big">R</span>
                   <strong id="profileName">Игрок</strong>
-                  <div class="muted" id="profileEmail"></div>
-                  <div class="muted" id="createdAt"></div>
                 </div>
+                <button class="icon-button" id="openProfileSettings" type="button"
+                  aria-label="Настройки профиля" title="Настройки профиля">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.9 1.9-.06-.06A1.7 1.7 0 0 0 16 18.43a1.7 1.7 0 0 0-1.02 1.58V21h-2.7v-.1A1.7 1.7 0 0 0 10.7 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 0 0 6.57 16a1.7 1.7 0 0 0-1.58-1.02H4v-2.7h.1A1.7 1.7 0 0 0 5.7 10.7a1.7 1.7 0 0 0-.34-1.88L5.3 8.76l1.9-1.9.06.06A1.7 1.7 0 0 0 9 7.26a1.7 1.7 0 0 0 1.02-1.58V4h2.7v.1A1.7 1.7 0 0 0 14.3 5.7a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.9 1.9-.06.06A1.7 1.7 0 0 0 17.74 9a1.7 1.7 0 0 0 1.58 1.02H20v2.7h-.1A1.7 1.7 0 0 0 18.3 14.3Z"/>
+                  </svg>
+                </button>
               </div>
-              <hr class="divider">
-              <div class="wallet">
+              <div class="wallet-summary">
                 <span class="hint">Игровой баланс</span>
                 <div class="wallet-balance" id="walletBalance" role="status">—</div>
                 <p class="hint">Виртуальные монеты, не имеющие денежной стоимости.</p>
-                <div style="margin-top:22px">
-                  <h2>Последние операции</h2>
-                  <ul id="walletHistory" class="wallet-history">
-                    <li class="hint">Загрузка...</li>
-                  </ul>
-                </div>
               </div>
-              <hr class="divider">
+            </div>
+            <aside class="card activity-card" aria-label="Последние операции">
+              <h2>Последние операции</h2>
+              <ul id="walletHistory" class="wallet-history">
+                <li class="hint">Загрузка...</li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+
+        <section class="page hidden" id="page-stats">
+          <div class="eyebrow">Аккаунт</div>
+          <h1>Статистика</h1>
+          <p class="section-lead">Прогресс и активность игрока.</p>
+          <div class="stack">
+            <div class="card">
+              <h2>Уровень игрока</h2>
               <div class="row">
                 <strong id="playerLevel">Уровень 1</strong>
                 <span id="playerXP" class="hint">0 / 100 XP</span>
@@ -293,26 +328,28 @@
                 <button class="button secondary" id="claimDailyXP" type="button">Получить XP</button>
               </div>
             </div>
-            <form class="card" id="profileSettingsForm">
-              <h2>Настройки</h2>
-              <label class="field">
-                <span class="field-label">Отображаемое имя</span>
-                <input class="input" id="profileNameInput" type="text" minlength="2" maxlength="32" required>
-              </label>
-              <div class="field-label">Аватар</div>
-              <div id="avatarChoices" class="avatar-choices" role="group" aria-label="Выбор аватара"></div>
-              <button class="button" id="profileSaveButton" type="submit">Сохранить</button>
-              <p class="hint" id="profileSaveStatus" role="status"></p>
-            </form>
             <div class="card">
-              <h2>Статистика</h2>
+              <h2>Твоя активность</h2>
               <div id="profileStats" class="stat-grid"><span class="muted">Загрузка...</span></div>
             </div>
-            <div class="card">
-              <h2>Достижения</h2>
-              <div id="profileAchievements" class="achievements"><span class="muted">Загрузка...</span></div>
-            </div>
           </div>
+        </section>
+
+        <section class="page hidden" id="page-settings">
+          <button class="back-link" id="backFromSettings" type="button">← Вернуться в профиль</button>
+          <div class="eyebrow">Аккаунт</div>
+          <h1>Настройки</h1>
+          <p class="section-lead">Изменение имени и аватара.</p>
+          <form class="card wallet-page-panel" id="profileSettingsForm">
+            <label class="field">
+              <span class="field-label">Отображаемое имя</span>
+              <input class="input" id="profileNameInput" type="text" minlength="2" maxlength="32" required>
+            </label>
+            <div class="field-label">Аватар</div>
+            <div id="avatarChoices" class="avatar-choices" role="group" aria-label="Выбор аватара"></div>
+            <button class="button" id="profileSaveButton" type="submit">Сохранить</button>
+            <p class="hint" id="profileSaveStatus" role="status"></p>
+          </form>
         </section>
 
         <section class="page hidden" id="page-deposit">
