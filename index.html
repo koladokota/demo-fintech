@@ -595,6 +595,7 @@
     let inventory = [];
 
     const TOKEN_KEY = "demo_fintech_token";
+    const PAGE_KEY_PREFIX = "demo_fintech_page_";
 
     async function request(url, options = {}) {
       const response = await fetch(API + url, {
@@ -615,7 +616,9 @@
       }
 
       if (!response.ok) {
-        throw new Error(result.message || text || "Ошибка запроса");
+        const error = new Error(result.message || text || "Ошибка запроса");
+        error.status = response.status;
+        throw error;
       }
 
       return result;
@@ -659,6 +662,12 @@
 
       loadDemo();
       render();
+
+      const pageKey = PAGE_KEY_PREFIX + currentUser.id;
+      const savedPage = sessionStorage.getItem(pageKey) || "overview";
+      const targetButton = Array.from(document.querySelectorAll(".nav button"))
+        .find(button => button.dataset.page === savedPage);
+      (targetButton || document.querySelector('[data-page="overview"]')).click();
     }
 
     function render() {
@@ -833,8 +842,12 @@
           }
         });
 
-      } catch {
-        localStorage.removeItem(TOKEN_KEY);
+      } catch (error) {
+        if (error.status === 401) {
+          localStorage.removeItem(TOKEN_KEY);
+        } else {
+          toast("Не удалось проверить сессию: " + error.message);
+        }
         return;
       }
 
@@ -859,6 +872,9 @@
     // Выход
 
     document.getElementById("logoutBtn").onclick = () => {
+      if (currentUser) {
+        sessionStorage.removeItem(PAGE_KEY_PREFIX + currentUser.id);
+      }
       localStorage.removeItem(TOKEN_KEY);
       currentUser = null;
 
@@ -886,6 +902,10 @@
         document.getElementById(
           "page-" + button.dataset.page
         ).classList.remove("hidden");
+
+        if (currentUser) {
+          sessionStorage.setItem(PAGE_KEY_PREFIX + currentUser.id, button.dataset.page);
+        }
       };
     });
 
