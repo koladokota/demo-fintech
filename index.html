@@ -113,11 +113,20 @@
     .identity .muted { font-size: 13px; word-break: break-word; }
     .divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
     .wallet-balance { margin: 8px 0 14px; font-size: clamp(28px, 5vw, 38px); font-weight: 800; line-height: 1.2; letter-spacing: -.025em; }
-    .wallet-tabs { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
-    .wallet-tabs button.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-    .wallet-panel { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 14px; background: #10141c; }
-    .wallet-panel .field { margin: 13px 0; }
-    .wallet-panel .input { max-width: 260px; }
+    .header-wallet-actions { display: flex; align-items: center; gap: 8px; margin-left: 6px; }
+    .wallet-shortcut {
+      width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 11px;
+      background: var(--surface); color: var(--text); font-size: 23px;
+      font-weight: 500; line-height: 1; display: inline-grid; place-items: center;
+    }
+    .wallet-shortcut:hover, .wallet-shortcut.active { border-color: var(--accent); color: var(--accent); }
+    .wallet-page-panel { max-width: 590px; }
+    .wallet-page-panel .input { max-width: 300px; }
+    .wallet-page-panel .field { margin: 22px 0 14px; }
+    .wallet-page-panel .wallet-balance { margin-bottom: 0; }
+    .back-link { display: inline-flex; padding: 0; border: 0; color: var(--accent);
+      background: transparent; font-weight: 600; margin-bottom: 18px; }
+
     .wallet-notice { font-size: 12px; color: var(--muted); margin-top: 12px; }
     .wallet-history { margin: 6px 0 0; padding: 0; list-style: none; }
     .wallet-history li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding: 10px 0; }
@@ -153,6 +162,10 @@
       .shell { padding: 14px 16px 55px; }
       .brand-note, .account-name { display: none; }
       .account { gap: 6px; }
+      .header-wallet-actions { gap: 5px; margin-left: 0; }
+      .wallet-shortcut { width: 32px; height: 34px; font-size: 20px; }
+      .button.text { padding: 5px; }
+
       .topbar { min-height: 50px; }
       .tabs { justify-content: space-between; gap: 12px; margin-top: 18px; }
       .page { padding-top: 26px; }
@@ -175,6 +188,12 @@
       <div id="topUser" class="account hidden">
         <span id="topAvatar" class="avatar">R</span>
         <span id="topName" class="account-name"></span>
+        <div class="header-wallet-actions" aria-label="Операции с балансом">
+          <button class="wallet-shortcut" id="openWalletDeposit" type="button"
+            title="Пополнить баланс" aria-label="Пополнить баланс" aria-pressed="false">+</button>
+          <button class="wallet-shortcut" id="openWalletWithdraw" type="button"
+            title="Вывести с баланса" aria-label="Вывести с баланса" aria-pressed="false">−</button>
+        </div>
         <button class="button text" id="logoutBtn" type="button">Выйти</button>
       </div>
     </header>
@@ -256,41 +275,6 @@
                 <span class="hint">Игровой баланс</span>
                 <div class="wallet-balance" id="walletBalance" role="status">—</div>
                 <p class="hint">Виртуальные монеты, не имеющие денежной стоимости.</p>
-                <div class="wallet-tabs" role="tablist" aria-label="Операции с балансом">
-                  <button class="button secondary" type="button" id="walletDepositTab" role="tab"
-                    aria-selected="false" aria-controls="walletDepositPanel">Пополнить</button>
-                  <button class="button secondary" type="button" id="walletWithdrawTab" role="tab"
-                    aria-selected="false" aria-controls="walletWithdrawPanel">Вывести</button>
-                </div>
-                <div class="wallet-panel hidden" id="walletDepositPanel" role="tabpanel" aria-labelledby="walletDepositTab">
-                  <h2>Пополнение баланса</h2>
-                  <form id="walletDepositForm">
-                    <label class="field">
-                      <span class="field-label">Количество виртуальных монет</span>
-                      <input class="input" id="walletDepositAmount" type="number" min="1" max="100000"
-                        step="1" value="1000" required inputmode="numeric">
-                    </label>
-                    <button class="button" id="walletDepositSubmit" type="submit" disabled>Начислить монеты</button>
-                  </form>
-                  <p class="wallet-notice" id="walletDepositNotice">
-                    Только демонстрационное пополнение; реальные платежи не принимаются.
-                  </p>
-                </div>
-                <div class="wallet-panel hidden" id="walletWithdrawPanel" role="tabpanel" aria-labelledby="walletWithdrawTab">
-                  <h2>Вывод баланса</h2>
-                  <form id="walletWithdrawForm">
-                    <label class="field">
-                      <span class="field-label">Количество виртуальных монет</span>
-                      <input class="input" id="walletWithdrawAmount" type="number" min="1" max="100000"
-                        step="1" value="250" required inputmode="numeric">
-                    </label>
-                    <button class="button secondary" id="walletWithdrawSubmit" type="submit" disabled>Списать монеты</button>
-                  </form>
-                  <p class="wallet-notice" id="walletWithdrawNotice">
-                    Демонстрационное списание монет. Перевод денег на карту или счёт не выполняется.
-                  </p>
-                </div>
-                <p class="hint" id="walletActionStatus" role="status" style="margin-top:12px"></p>
                 <div style="margin-top:22px">
                   <h2>Последние операции</h2>
                   <ul id="walletHistory" class="wallet-history">
@@ -328,6 +312,54 @@
               <h2>Достижения</h2>
               <div id="profileAchievements" class="achievements"><span class="muted">Загрузка...</span></div>
             </div>
+          </div>
+        </section>
+
+        <section class="page hidden" id="page-deposit">
+          <button class="back-link" id="backFromDeposit" type="button">← Вернуться в профиль</button>
+          <div class="eyebrow">Кошелёк</div>
+          <h1>Пополнение</h1>
+          <p class="section-lead">Операции только с виртуальными монетами.</p>
+          <div class="card wallet-page-panel">
+            <span class="hint">Текущий баланс</span>
+            <div class="wallet-balance" id="walletDepositBalance">—</div>
+            <hr class="divider">
+            <form id="walletDepositForm">
+              <label class="field">
+                <span class="field-label">Количество виртуальных монет</span>
+                <input class="input" id="walletDepositAmount" type="number" min="1" max="100000"
+                  step="1" value="1000" required inputmode="numeric">
+              </label>
+              <button class="button" id="walletDepositSubmit" type="submit" disabled>Пополнить баланс</button>
+            </form>
+            <p class="wallet-notice" id="walletDepositNotice">
+              Реальные платежи не принимаются. Тестовые начисления доступны только в режиме разработки.
+            </p>
+            <p class="status" id="walletDepositStatus" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section class="page hidden" id="page-withdraw">
+          <button class="back-link" id="backFromWithdraw" type="button">← Вернуться в профиль</button>
+          <div class="eyebrow">Кошелёк</div>
+          <h1>Вывод</h1>
+          <p class="section-lead">Операции только с виртуальными монетами.</p>
+          <div class="card wallet-page-panel">
+            <span class="hint">Доступно</span>
+            <div class="wallet-balance" id="walletWithdrawBalance">—</div>
+            <hr class="divider">
+            <form id="walletWithdrawForm">
+              <label class="field">
+                <span class="field-label">Количество виртуальных монет</span>
+                <input class="input" id="walletWithdrawAmount" type="number" min="1" max="100000"
+                  step="1" value="250" required inputmode="numeric">
+              </label>
+              <button class="button secondary" id="walletWithdrawSubmit" type="submit" disabled>Списать монеты</button>
+            </form>
+            <p class="wallet-notice" id="walletWithdrawNotice">
+              Денежные переводы не выполняются. Тестовые списания доступны только в режиме разработки.
+            </p>
+            <p class="status" id="walletWithdrawStatus" role="status" aria-live="polite"></p>
           </div>
         </section>
 
