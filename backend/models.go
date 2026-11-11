@@ -7,6 +7,7 @@ type User struct {
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
+	AvatarKey string `json:"avatar_key"`
 }
 type AuthRequest struct {
 	Name     string `json:"name"`
