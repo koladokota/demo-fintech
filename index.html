@@ -403,7 +403,6 @@
     let walletDemoEnabled = false;
     let walletBalance = null;
     let walletTransferPending = false;
-    let activeWalletTab = "";
     let toastHandle;
 
     function el(id) { return document.getElementById(id); }
@@ -453,12 +452,18 @@
     }
 
     function changePage(name) {
-      const page = ["games", "profile", "referrals"].includes(name) ? name : "games";
+      const page = ["games", "profile", "referrals", "deposit", "withdraw"].includes(name) ? name : "games";
+      const walletPage = page === "deposit" || page === "withdraw";
       document.querySelectorAll(".tabs button").forEach(button => {
-        const active = button.dataset.page === page;
+        const active = button.dataset.page === page || (walletPage && button.dataset.page === "profile");
         button.classList.toggle("active", active);
-        button.setAttribute("aria-current", active ? "page" : "false");
+        button.setAttribute("aria-current", button.dataset.page === page ? "page" : "false");
       });
+      for (const kind of ["deposit", "withdraw"]) {
+        const shortcut = el(kind === "deposit" ? "openWalletDeposit" : "openWalletWithdraw");
+        shortcut.classList.toggle("active", page === kind);
+        shortcut.setAttribute("aria-pressed", String(page === kind));
+      }
       document.querySelectorAll("main > section").forEach(node => {
         node.classList.toggle("hidden", node.id !== "page-" + page);
       });
@@ -475,6 +480,9 @@
           }
         });
       }
+      if (walletPage) {
+        loadWalletData().catch(error => toast("Не удалось загрузить баланс: " + error.message));
+      }
       if (page === "referrals") {
         loadReferrals().catch(error => toast("Не удалось загрузить рефералов: " + error.message));
       }
@@ -483,6 +491,10 @@
     document.querySelectorAll(".tabs button").forEach(button => {
       button.onclick = () => changePage(button.dataset.page);
     });
+    el("openWalletDeposit").onclick = () => changePage("deposit");
+    el("openWalletWithdraw").onclick = () => changePage("withdraw");
+    el("backFromDeposit").onclick = () => changePage("profile");
+    el("backFromWithdraw").onclick = () => changePage("profile");
 
     function showApp() {
       el("authView").classList.add("hidden");
@@ -566,8 +578,11 @@
       walletDemoEnabled = false;
       walletBalance = null;
       el("walletBalance").textContent = "—";
+      el("walletDepositBalance").textContent = "—";
+      el("walletWithdrawBalance").textContent = "—";
+      el("walletDepositStatus").textContent = "";
+      el("walletWithdrawStatus").textContent = "";
       el("walletHistory").replaceChildren();
-      setWalletTab("");
       el("appView").classList.add("hidden");
       el("topUser").classList.add("hidden");
       el("authView").classList.remove("hidden");
@@ -655,21 +670,9 @@
       return Number(value).toLocaleString("ru-RU") + " монет";
     }
 
-    function setWalletTab(kind) {
-      activeWalletTab = kind;
-      for (const key of ["deposit", "withdraw"]) {
-        const tab = el(key === "deposit" ? "walletDepositTab" : "walletWithdrawTab");
-        const panel = el(key === "deposit" ? "walletDepositPanel" : "walletWithdrawPanel");
-        const selected = kind === key;
-        tab.classList.toggle("active", selected);
-        tab.setAttribute("aria-selected", String(selected));
-        panel.classList.toggle("hidden", !selected);
-      }
-      el("walletActionStatus").textContent = "";
+    function walletStatus(kind, message) {
+      el(kind === "deposit" ? "walletDepositStatus" : "walletWithdrawStatus").textContent = message;
     }
-
-    el("walletDepositTab").onclick = () => setWalletTab(activeWalletTab === "deposit" ? "" : "deposit");
-    el("walletWithdrawTab").onclick = () => setWalletTab(activeWalletTab === "withdraw" ? "" : "withdraw");
 
     async function loadWalletData() {
       if (!currentUser) return;
@@ -682,9 +685,11 @@
 
       walletBalance = wallet.balance;
       walletDemoEnabled = features.demo_credits_enabled === true;
-      el("walletBalance").textContent = coins(walletBalance);
-      el("walletDepositSubmit").disabled = !walletDemoEnabled;
-      el("walletWithdrawSubmit").disabled = !walletDemoEnabled;
+      for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
+        el(id).textContent = coins(walletBalance);
+      }
+      el("walletDepositSubmit").disabled = !walletDemoEnabled || walletTransferPending;
+      el("walletWithdrawSubmit").disabled = !walletDemoEnabled || walletTransferPending;
       el("walletDepositNotice").textContent = walletDemoEnabled
         ? "Тестовое начисление виртуальных монет. Реальных платежей нет."
         : "Пополнение отключено: платёжная система не подключена. Демо-операции доступны только в режиме разработки.";
@@ -722,7 +727,7 @@
     async function submitWalletOperation(kind) {
       if (walletTransferPending) return;
       if (!walletDemoEnabled) {
-        el("walletActionStatus").textContent = "Операция недоступна вне демонстрационного режима.";
+        walletStatus(kind, "Операция недоступна вне демонстрационного режима.");
         return;
       }
       const deposit = kind === "deposit";
@@ -730,11 +735,11 @@
       const submit = el(deposit ? "walletDepositSubmit" : "walletWithdrawSubmit");
       const amount = Number(input.value);
       if (!input.value.trim() || !Number.isInteger(amount) || amount < 1 || amount > 100000) {
-        el("walletActionStatus").textContent = "Укажи целое количество от 1 до 100 000 монет.";
+        walletStatus(kind, "Укажи целое количество от 1 до 100 000 монет.");
         return;
       }
       if (!deposit && walletBalance !== null && amount > walletBalance) {
-        el("walletActionStatus").textContent = "Недостаточно виртуальных монет.";
+        walletStatus(kind, "Недостаточно виртуальных монет.");
         return;
       }
       walletTransferPending = true;
@@ -748,19 +753,21 @@
         });
         if (!currentUser || currentUser.id !== beforeUser) return;
         walletBalance = result.balance;
-        el("walletBalance").textContent = coins(result.balance);
-        el("walletActionStatus").textContent = deposit
+        for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
+          el(id).textContent = coins(result.balance);
+        }
+        walletStatus(kind, deposit
           ? "Виртуальный баланс пополнен на " + coins(result.amount) + "."
-          : "Списано " + coins(result.amount) + ". Перевода денежных средств нет.";
+          : "Списано " + coins(result.amount) + ". Перевода денежных средств нет.");
         try {
           await loadWalletData();
         } catch {
           toast("Операция сохранена, но история не обновилась. Перезагрузи страницу.");
         }
       } catch (error) {
-        el("walletActionStatus").textContent = error.status === 409
+        walletStatus(kind, error.status === 409
           ? "Недостаточно виртуальных монет."
-          : "Не удалось выполнить тестовую операцию: " + error.message;
+          : "Не удалось выполнить тестовую операцию: " + error.message);
       } finally {
         walletTransferPending = false;
         el("walletDepositSubmit").disabled = !walletDemoEnabled;
