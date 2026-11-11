@@ -3,19 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b0d12">
+  <meta name="theme-color" content="#090810">
   <title>ROCKET X — игровой кабинет</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #0b0d12;
-      --surface: #141821;
-      --border: #292f3b;
-      --text: #f4f5f7;
-      --muted: #9aa4b5;
-      --accent: #9fe8cd;
-      --accent-ink: #0b2119;
-      --error: #ffb1b6;
+      --bg: #090810;
+      --surface: #171320;
+      --border: rgba(222, 192, 255, .17);
+      --text: #fcf8ff;
+      --muted: #b2a8c2;
+      --accent: #dca0ff;
+      --accent-ink: #180b20;
+      --error: #ffa8b9;
+      --violet: #a875fc;
+      --pink: #ed70db;
+      --peach: #ffbe7d;
+      --gradient: linear-gradient(115deg, #ae69fa 0%, #e271df 48%, #ffbb83 100%);
+      --focus: #f1b2ff;
     }
     * { box-sizing: border-box; }
     body {
@@ -205,6 +210,264 @@
       .copy-row { flex-direction: column; }
       .controls { flex-wrap: wrap; }
     }
+  
+    /* ROCKET X — dark aurora theme inspired by Koda's atmosphere, not its branding. */
+    html {
+      scroll-behavior: smooth;
+      scrollbar-color: #524361 #0a0811;
+    }
+
+    body {
+      min-height: 100vh;
+      position: relative;
+      isolation: isolate;
+      overflow-x: hidden;
+      background:
+        radial-gradient(ellipse 48% 40% at 85% -7%, rgba(153, 72, 231, .14), transparent 80%),
+        radial-gradient(ellipse 42% 30% at -12% 40%, rgba(177, 55, 188, .085), transparent 80%),
+        var(--bg);
+      color: var(--text);
+      letter-spacing: -.009em;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    body::before {
+      width: min(760px, 72vw);
+      height: min(760px, 72vw);
+      top: -385px;
+      right: -240px;
+      border-radius: 50%;
+      opacity: .57;
+      background:
+        radial-gradient(ellipse at 35% 42%, rgba(228, 91, 212, .25), transparent 52%),
+        radial-gradient(ellipse at 70% 58%, rgba(117, 68, 238, .29), transparent 57%),
+        radial-gradient(ellipse at 50% 80%, rgba(255, 157, 96, .13), transparent 67%);
+      filter: blur(58px);
+      animation: auroraFloat 19s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
+    body::after {
+      inset: 0;
+      opacity: .28;
+      background-image:
+        linear-gradient(rgba(209, 157, 255, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(209, 157, 255, .045) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 92%);
+    }
+
+    ::selection {
+      background: rgba(205, 104, 237, .39);
+      color: white;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1160px;
+      padding: 28px 24px 90px;
+    }
+
+    .topbar {
+      min-height: 74px;
+      padding: 13px 17px;
+      gap: 18px;
+      border-radius: 19px;
+      border: 1px solid rgba(219, 179, 255, .15);
+      background: linear-gradient(120deg, rgba(31, 22, 45, .82), rgba(17, 15, 27, .77));
+      box-shadow: 0 18px 65px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.035);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+
+    .brand {
+      flex: 0 0 auto;
+      gap: 13px;
+    }
+
+    .mark {
+      width: 43px;
+      height: 43px;
+      border-radius: 13px;
+      background: var(--gradient);
+      box-shadow: 0 5px 25px rgba(192, 101, 224, .24), inset 0 1px 0 rgba(255,255,255,.29);
+      color: #1b0d21;
+      transition: transform .35s cubic-bezier(.2,.9,.2,1), box-shadow .35s ease;
+    }
+    .brand:hover .mark {
+      transform: rotate(-8deg) scale(1.055);
+      box-shadow: 0 7px 32px rgba(205, 103, 241, .38);
+    }
+    .brand-name { font-size: 17px; font-weight: 830; letter-spacing: .055em; }
+    .brand-note { color: #b1a3c5; letter-spacing: .018em; }
+
+    .account { gap: 11px; }
+    .account-name { font-weight: 670; color: #f5edfc; }
+    .header-balance {
+      background: rgba(155, 96, 186, .11);
+      border: 1px solid rgba(213, 149, 244, .21);
+      border-radius: 11px;
+      color: #f4dafa;
+      box-shadow: inset 0 1px rgba(255,255,255,.055);
+    }
+    .header-balance-unit { color: #c4a7d1; }
+
+    .avatar {
+      border: 1px solid rgba(220, 163, 245, .20);
+      background: linear-gradient(145deg, #523267 0%, #291e39 100%);
+      color: #fff3fc;
+      box-shadow: inset 0 1px rgba(255,255,255,.10), 0 7px 22px rgba(0,0,0,.16);
+    }
+    .avatar.big { width: 67px; height: 67px; border-radius: 18px; }
+
+    .tabs {
+      width: max-content;
+      max-width: 100%;
+      padding: 6px;
+      margin-top: 30px;
+      display: flex;
+      gap: 4px;
+      border: 1px solid rgba(202, 158, 239, .13);
+      border-radius: 16px;
+      background: rgba(25, 18, 36, .72);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .tabs button {
+      position: relative;
+      flex-shrink: 0;
+      min-height: 40px;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      padding: 9px 18px;
+      color: #afa4c0;
+      font-weight: 640;
+      background: transparent;
+      transition: color .2s ease, background .25s ease, border-color .25s ease, transform .25s ease;
+    }
+    .tabs button:not(.active):hover {
+      color: #fff;
+      background: rgba(215, 138, 255, .075);
+    }
+    .tabs button.active {
+      color: #fff5fe;
+      border-color: rgba(234, 172, 255, .20);
+      background: linear-gradient(125deg, rgba(165, 85, 222, .29), rgba(218, 100, 174, .13));
+      box-shadow: 0 2px 16px rgba(139, 56, 214, .10), inset 0 1px rgba(255,255,255,.06);
+    }
+    .tabs button.active::after {
+      content: "";
+      position: absolute;
+      bottom: -7px;
+      left: 25%;
+      right: 25%;
+      height: 2px;
+      border-radius: 99px;
+      background: var(--gradient);
+      box-shadow: 0 0 14px rgba(228, 112, 226, .58);
+      animation: lineGrow .35s ease both;
+    }
+
+    .page {
+      max-width: 860px;
+      padding-top: 44px;
+      transform-origin: 50% 12%;
+    }
+    .page:not(.hidden) {
+      animation: pageEnter .46s cubic-bezier(.18,.72,.23,1) both;
+    }
+    .profile-page { max-width: none; padding-top: 39px; }
+
+    h1 {
+      margin: 12px 0 10px;
+      font-size: clamp(30px, 4vw, 43px);
+      font-weight: 800;
+      letter-spacing: -.047em;
+      line-height: 1.15;
+      text-wrap: balance;
+    }
+    h2 {
+      margin-bottom: 18px;
+      font-size: 19px;
+      font-weight: 740;
+      letter-spacing: -.024em;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 11px;
+      border: 1px solid rgba(201, 113, 250, .19);
+      border-radius: 999px;
+      background: rgba(165, 82, 214, .095);
+      color: #dfb6ff;
+      font-size: 10px;
+      font-weight: 780;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #ed91e7;
+      box-shadow: 0 0 12px rgba(237, 145, 231, .75);
+    }
+    .section-lead { color: #b8aeca; font-size: 15px; margin-bottom: 30px; }
+    .hint, .muted { color: var(--muted); }
+
+    .card {
+      position: relative;
+      isolation: isolate;
+      padding: 28px;
+      border-radius: 24px;
+      border: 1px solid rgba(218, 171, 255, .16);
+      background:
+        linear-gradient(150deg, rgba(34, 26, 49, .80), rgba(20, 18, 31, .92) 61%),
+        rgba(22, 18, 32, .92);
+      box-shadow: 0 24px 75px rgba(0,0,0,.21), inset 0 1px 0 rgba(255,255,255,.042);
+      backdrop-filter: blur(19px);
+      -webkit-backdrop-filter: blur(19px);
+      transition: border-color .28s ease, box-shadow .3s ease, transform .3s ease;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      border-radius: inherit;
+      background: radial-gradient(ellipse at 4% -28%, rgba(197, 102, 239, .11), transparent 68%);
+    }
+    .card:hover {
+      border-color: rgba(222, 164, 255, .26);
+      box-shadow: 0 27px 77px rgba(0,0,0,.26), 0 0 34px rgba(161, 79, 218, .035), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .profile-layout { gap: 20px; }
+    .profile-identity .identity strong { font-size: 22px; font-weight: 780; }
+    .wallet-summary { border-top-color: rgba(219, 169, 255, .12); }
+    .wallet-balance {
+      color: #fff2ff;
+      font-size: clamp(29px, 4vw, 40px);
+      letter-spacing: -.04em;
+      text-shadow: 0 0 30px rgba(232, 133, 222, .11);
+    }
+    .activity-card .wallet-history li { border-bottom-color: rgba(202, 156, 238, .09); }
+    .wallet-history-amount.positive { color: #ecadff; }
+    .wallet-history-amount.negative { color: #d2b5d5; }
+
   </style>
 </head>
 <body>
