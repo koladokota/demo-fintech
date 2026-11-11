@@ -689,6 +689,7 @@
     let demo = { balance: 0, transactions: [] };
     let inventory = [];
     let playerProgress = null;
+    let selectedAvatarKey = "initial";
 
     const TOKEN_KEY = "demo_fintech_token";
     const PAGE_KEY_PREFIX = "demo_fintech_page_";
@@ -736,6 +737,17 @@
       return Number(value || 0).toLocaleString("ru-RU") + " монет";
     }
 
+    function avatarSymbol(key, name) {
+      const symbols = {
+        rocket: "🚀",
+        planet: "🪐",
+        bolt: "⚡",
+        star: "⭐",
+        shield: "🛡️"
+      };
+      return symbols[key] || (String(name || "U").charAt(0).toUpperCase());
+    }
+
     function showApp() {
       document.getElementById("authView").classList.add("hidden");
       document.getElementById("appView").classList.remove("hidden");
@@ -759,7 +771,7 @@
 
       document.getElementById("topName").textContent = u.name;
       document.getElementById("topAvatar").textContent =
-        u.name[0].toUpperCase();
+        avatarSymbol(u.avatar_key, u.name);
 
       document.getElementById("balanceMetric").textContent =
         money(demo.balance);
@@ -781,7 +793,7 @@
       document.getElementById("profileEmail").textContent = u.email;
 
       document.getElementById("profileAvatar").textContent =
-        u.name[0].toUpperCase();
+        avatarSymbol(u.avatar_key, u.name);
 
       document.getElementById("createdAt").textContent =
         new Date(u.created_at).toLocaleDateString("ru-RU");
@@ -910,7 +922,7 @@
     }
 
     async function refreshAccountData() {
-      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress()]);
+      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress(), loadProfile()]);
       if (results.some(result => result.status === "rejected")) {
         toast("Часть данных не загрузилась. Попробуйте обновить страницу.");
       }
@@ -1223,10 +1235,135 @@
       }
     };
 
+    const avatarOptions = [
+      { key: "initial", title: "Первая буква имени" },
+      { key: "rocket", title: "Ракета" },
+      { key: "planet", title: "Планета" },
+      { key: "bolt", title: "Молния" },
+      { key: "star", title: "Звезда" },
+      { key: "shield", title: "Щит" }
+    ];
+
+    function renderAvatarChoices() {
+      const container = document.getElementById("avatarChoices");
+      container.replaceChildren();
+      for (const option of avatarOptions) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "avatar-choice" +
+          (selectedAvatarKey === option.key ? " selected" : "");
+        button.title = option.title;
+        button.setAttribute("aria-label", option.title);
+        button.setAttribute("aria-pressed", String(selectedAvatarKey === option.key));
+        button.textContent = avatarSymbol(option.key, document.getElementById("profileNameInput").value);
+        button.onclick = () => {
+          selectedAvatarKey = option.key;
+          renderAvatarChoices();
+        };
+        container.appendChild(button);
+      }
+    }
+
+    function profileStatNode(title, value) {
+      const node = document.createElement("div");
+      node.className = "profile-stat";
+      const valueNode = document.createElement("strong");
+      valueNode.textContent = Number(value ?? 0).toLocaleString("ru-RU");
+      const titleNode = document.createElement("span");
+      titleNode.className = "muted";
+      titleNode.textContent = title;
+      node.append(valueNode, titleNode);
+      return node;
+    }
+
+    function applyProfile(profile) {
+      currentUser = profile.user;
+      render();
+
+      const input = document.getElementById("profileNameInput");
+      input.value = profile.user.name;
+      selectedAvatarKey = profile.user.avatar_key || "initial";
+      renderAvatarChoices();
+
+      const stats = profile.stats;
+      const statsContainer = document.getElementById("profileStats");
+      statsContainer.replaceChildren(
+        profileStatNode("Уровень", stats.level),
+        profileStatNode("Общий XP", stats.total_xp),
+        profileStatNode("Предметы", stats.items_owned),
+        profileStatNode("Завершено игр", stats.games_finished),
+        profileStatNode("Побед", stats.games_won),
+        profileStatNode("Ежедневных наград", stats.daily_checkins)
+      );
+
+      const achievements = document.getElementById("profileAchievements");
+      achievements.replaceChildren();
+      for (const item of profile.achievements) {
+        const card = document.createElement("div");
+        card.className = "achievement" + (item.unlocked ? "" : " locked");
+        const title = document.createElement("div");
+        title.className = "achievement-title";
+        title.textContent = (item.unlocked ? "✓ " : "○ ") + item.title;
+        const description = document.createElement("div");
+        description.className = "muted";
+        description.textContent = item.description;
+        card.append(title, description);
+        achievements.appendChild(card);
+      }
+    }
+
+    async function loadProfile() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token || !currentUser) return;
+      const profile = await request("/api/profile", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (currentUser && currentUser.id === profile.user.id) {
+        applyProfile(profile);
+      }
+    }
+
+    document.getElementById("profileSettingsForm").onsubmit = async event => {
+      event.preventDefault();
+      const button = document.getElementById("profileSaveButton");
+      const status = document.getElementById("profileSaveStatus");
+      const name = document.getElementById("profileNameInput").value.trim();
+      if (Array.from(name).length < 2 || Array.from(name).length > 32) {
+        status.textContent = "Имя должно содержать от 2 до 32 символов.";
+        return;
+      }
+
+      button.disabled = true;
+      status.textContent = "Сохранение...";
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const profile = await request("/api/profile", {
+          method: "PATCH",
+          headers: { Authorization: "Bearer " + token },
+          body: JSON.stringify({ name, avatar_key: selectedAvatarKey })
+        });
+        applyProfile(profile);
+        status.textContent = "Настройки сохранены.";
+        toast("Профиль обновлён");
+      } catch (error) {
+        status.textContent = "Ошибка сохранения: " + error.message;
+      } finally {
+        button.disabled = false;
+      }
+    };
+
+    document.getElementById("profileNameInput").addEventListener("input", () => {
+      if (selectedAvatarKey === "initial") renderAvatarChoices();
+    });
+
     document.querySelector('[data-page="profile"]')
-      .addEventListener("click", () => loadProgress().catch(error => {
-        toast("Не удалось загрузить уровень: " + error.message);
-      }));
+      .addEventListener("click", () => {
+        Promise.allSettled([loadProgress(), loadProfile()]).then(results => {
+          if (results.some(r => r.status === "rejected")) {
+            toast("Не удалось обновить данные профиля.");
+          }
+        });
+      });
 
     function renderNumberGame() {
       const game = numberGame || { status: "none", attempts_left: 0 };
