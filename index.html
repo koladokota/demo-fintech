@@ -578,8 +578,9 @@
     const API = "";
 
     let currentUser = null;
-    let demo = { balance: 0, earned: 0, transactions: [] };
+    let demo = { balance: 0, transactions: [] };
     let inventory = [];
+    let playerProgress = null;
 
     const TOKEN_KEY = "demo_fintech_token";
     const PAGE_KEY_PREFIX = "demo_fintech_page_";
@@ -624,24 +625,7 @@
     }
 
     function money(value) {
-      return "₽ " + Number(value || 0).toLocaleString("ru-RU");
-    }
-
-    function saveDemo() {
-      localStorage.setItem(
-        "demo_data_" + currentUser.id,
-        JSON.stringify(demo)
-      );
-    }
-
-    function loadDemo() {
-      const saved = localStorage.getItem(
-        "demo_data_" + currentUser.id
-      );
-
-      demo = saved
-        ? JSON.parse(saved)
-        : { balance: 0, earned: 0, transactions: [] };
+      return Number(value || 0).toLocaleString("ru-RU") + " монет";
     }
 
     function showApp() {
@@ -649,8 +633,11 @@
       document.getElementById("appView").classList.remove("hidden");
       document.getElementById("topUser").classList.remove("hidden");
 
-      loadDemo();
+      demo = { balance: 0, transactions: [] };
+      inventory = [];
+      playerProgress = null;
       render();
+      loadFeatures().catch(() => {});
 
       const pageKey = PAGE_KEY_PREFIX + currentUser.id;
       const savedPage = sessionStorage.getItem(pageKey) || "overview";
@@ -669,21 +656,18 @@
       document.getElementById("balanceMetric").textContent =
         money(demo.balance);
 
-      document.getElementById("refMetric").textContent = "0";
-      document.getElementById("earnedMetric").textContent =
-        money(demo.earned);
+      document.getElementById("levelMetric").textContent =
+        playerProgress ? String(playerProgress.level) : "—";
+      document.getElementById("levelMetricHint").textContent =
+        playerProgress ? playerProgress.total_xp + " XP всего" : "Опыт загружается";
+      document.getElementById("inventoryMetric").textContent =
+        Array.isArray(inventory) ? String(inventory.length) : "—";
 
       document.getElementById("recentTable").innerHTML =
         createTable(demo.transactions.slice(0, 5));
 
       document.getElementById("allTable").innerHTML =
         createTable(demo.transactions);
-
-      document.getElementById("refList").innerHTML =
-        '<div class="empty">Реферальная система будет подключена отдельно.</div>';
-
-      document.getElementById("refLink").value =
-        "Пока недоступно";
 
       document.getElementById("profileName").textContent = u.name;
       document.getElementById("profileEmail").textContent = u.email;
@@ -696,10 +680,12 @@
 
       document.getElementById("profileId").textContent = u.id;
 
-      document.getElementById("usersCount").textContent = "—";
-      document.getElementById("totalVirtual").textContent = "—";
-      document.getElementById("opsCount").textContent =
-        demo.transactions.length;
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"\x27]/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "\x27": "&#39;"
+      }[char]));
     }
 
     function createTable(rows) {
@@ -720,9 +706,9 @@
     <tbody>
       ${rows.map(t => `
       <tr>
-        <td>${new Date(t.date).toLocaleString("ru-RU")}</td>
-        <td>${t.type}</td>
-        <td>${t.description}</td>
+        <td>${escapeHTML(new Date(t.date).toLocaleString("ru-RU"))}</td>
+        <td>${escapeHTML(t.type)}</td>
+        <td>${escapeHTML(t.description)}</td>
         <td>${t.amount >= 0 ? "+" : ""}${money(t.amount)}</td>
       </tr>
       `).join("")}
@@ -752,6 +738,9 @@
 
       document.getElementById("nameInput").required =
         mode === "register";
+      const password = document.getElementById("passwordInput");
+      password.minLength = mode === "register" ? 8 : 1;
+      password.placeholder = mode === "register" ? "Не менее 8 символов" : "Введите пароль";
 
       document.getElementById("authSubmit").textContent =
         mode === "login" ? "Войти" : "Зарегистрироваться";
@@ -900,19 +889,6 @@
 
     // Демонстрационные виртуальные операции
 
-    function addTransaction(type, amount, description) {
-      demo.transactions.unshift({
-        type,
-        amount,
-        description,
-        date: new Date().toISOString()
-      });
-
-      saveDemo();
-      render();
-    }
-
-
     document.getElementById("demoAdd").onclick = async () => {
       const button = document.getElementById("demoAdd");
       button.disabled = true;
@@ -964,25 +940,6 @@
         button.disabled = false;
       }
     };
-    document.getElementById("copyRef").onclick = () => {
-      toast("Реферальная система пока не подключена");
-    };
-
-    document.getElementById("resetData").onclick = () => {
-      if (confirm("Удалить локальные демо-данные?")) {
-        demo = {
-          balance: 0,
-          earned: 0,
-          transactions: []
-        };
-
-        saveDemo();
-        render();
-        toast("Демо-данные сброшены");
-      }
-    };
-
-
     async function loadShop() {
       const grid = document.getElementById("shopGrid");
       grid.textContent = "Загрузка магазина...";
