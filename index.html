@@ -252,6 +252,53 @@
                 </div>
               </div>
               <hr class="divider">
+              <div class="wallet">
+                <span class="hint">Игровой баланс</span>
+                <div class="wallet-balance" id="walletBalance" role="status">—</div>
+                <p class="hint">Виртуальные монеты, не имеющие денежной стоимости.</p>
+                <div class="wallet-tabs" role="tablist" aria-label="Операции с балансом">
+                  <button class="button secondary" type="button" id="walletDepositTab" role="tab"
+                    aria-selected="false" aria-controls="walletDepositPanel">Пополнить</button>
+                  <button class="button secondary" type="button" id="walletWithdrawTab" role="tab"
+                    aria-selected="false" aria-controls="walletWithdrawPanel">Вывести</button>
+                </div>
+                <div class="wallet-panel hidden" id="walletDepositPanel" role="tabpanel" aria-labelledby="walletDepositTab">
+                  <h2>Пополнение баланса</h2>
+                  <form id="walletDepositForm">
+                    <label class="field">
+                      <span class="field-label">Количество виртуальных монет</span>
+                      <input class="input" id="walletDepositAmount" type="number" min="1" max="100000"
+                        step="1" value="1000" required inputmode="numeric">
+                    </label>
+                    <button class="button" id="walletDepositSubmit" type="submit" disabled>Начислить монеты</button>
+                  </form>
+                  <p class="wallet-notice" id="walletDepositNotice">
+                    Только демонстрационное пополнение; реальные платежи не принимаются.
+                  </p>
+                </div>
+                <div class="wallet-panel hidden" id="walletWithdrawPanel" role="tabpanel" aria-labelledby="walletWithdrawTab">
+                  <h2>Вывод баланса</h2>
+                  <form id="walletWithdrawForm">
+                    <label class="field">
+                      <span class="field-label">Количество виртуальных монет</span>
+                      <input class="input" id="walletWithdrawAmount" type="number" min="1" max="100000"
+                        step="1" value="250" required inputmode="numeric">
+                    </label>
+                    <button class="button secondary" id="walletWithdrawSubmit" type="submit" disabled>Списать монеты</button>
+                  </form>
+                  <p class="wallet-notice" id="walletWithdrawNotice">
+                    Демонстрационное списание монет. Перевод денег на карту или счёт не выполняется.
+                  </p>
+                </div>
+                <p class="hint" id="walletActionStatus" role="status" style="margin-top:12px"></p>
+                <div style="margin-top:22px">
+                  <h2>Последние операции</h2>
+                  <ul id="walletHistory" class="wallet-history">
+                    <li class="hint">Загрузка...</li>
+                  </ul>
+                </div>
+              </div>
+              <hr class="divider">
               <div class="row">
                 <strong id="playerLevel">Уровень 1</strong>
                 <span id="playerXP" class="hint">0 / 100 XP</span>
