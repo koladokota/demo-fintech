@@ -108,8 +108,11 @@ func TestWalletPagesAreIndependentOfProfile(t *testing.T) {
 	if !strings.Contains(header, `aria-label="Настройки профиля"`) {
 		t.Error("header gear must have an accessible label")
 	}
-	if !strings.Contains(html, `el("walletHeaderBalance").textContent = Number(balance).toLocaleString("ru-RU")`) {
-		t.Error("header balance is not synchronized with the API balance")
+	if !strings.Contains(html, `const header = el("walletHeaderBalance")`) ||
+		!strings.Contains(html, `header.textContent = Number(balance).toLocaleString("ru-RU")`) ||
+		!strings.Contains(html, `setWalletBalance(wallet.balance)`) ||
+		!strings.Contains(html, `setWalletBalance(result.balance)`) {
+		t.Error("header balance is not synchronized with the wallet and transfer API")
 	}
 
 	ids := regexp.MustCompile(`id="([^"]+)"`).FindAllStringSubmatch(html, -1)
