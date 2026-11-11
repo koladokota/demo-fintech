@@ -33,6 +33,5 @@ jobs:
       - run: psql "$DATABASE_URL" -f migrations/001_initial.sql
       - run: psql "$DATABASE_URL" -f migrations/002_progression.sql
       - run: psql "$DATABASE_URL" -f migrations/003_number_game.sql
-      - run: psql "$DATABASE_URL" -f migrations/004_user_profile.sql
       - run: go test -count=1 ./...
       - run: go vet ./...
