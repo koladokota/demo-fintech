@@ -10,9 +10,10 @@ type User struct {
 	AvatarKey string `json:"avatar_key"`
 }
 type AuthRequest struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	ReferralCode string `json:"referral_code,omitempty"`
 }
 type AuthResponse struct {
 	Token string `json:"token"`

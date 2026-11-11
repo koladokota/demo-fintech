@@ -32,6 +32,7 @@ func hashToken(token string) string {
 func (s *Service) Register(ctx context.Context, req AuthRequest) (AuthResponse, error) {
 	req.Name = strings.TrimSpace(req.Name)
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	req.ReferralCode = strings.ToUpper(strings.TrimSpace(req.ReferralCode))
 	if req.Name == "" || !strings.Contains(req.Email, "@") || len(req.Password) < 8 {
 		return AuthResponse{}, errInvalidInput
 	}
@@ -43,7 +44,21 @@ func (s *Service) Register(ctx context.Context, req AuthRequest) (AuthResponse, 
 	if err != nil {
 		return AuthResponse{}, err
 	}
-	u, err := s.repo.CreateUser(ctx, id, req.Name, req.Email, string(hash))
+	var referrerID string
+	if req.ReferralCode != "" {
+		referrerID, err = s.repo.LookupReferrer(ctx, req.ReferralCode)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return AuthResponse{}, errInvalidReferral
+		}
+		if err != nil {
+			return AuthResponse{}, err
+		}
+	}
+	code, err := newReferralCode()
+	if err != nil {
+		return AuthResponse{}, err
+	}
+	u, err := s.repo.CreateUserWithReferral(ctx, id, req.Name, req.Email, string(hash), code, referrerID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -90,6 +105,7 @@ func (s *Service) SpendDemo(ctx context.Context, userID string) (int64, error) {
 }
 
 var errInvalidInput = errors.New("invalid input")
+var errInvalidReferral = errors.New("unknown referral code")
 var errUnauthorized = errors.New("unauthorized")
 var errDemoDisabled = errors.New("demo credits disabled")
 var errConflict = errors.New("conflict")

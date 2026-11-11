@@ -15,6 +15,25 @@ func (r *Repository) CreateUser(ctx context.Context, id, name, email, passwordHa
 	err := r.db.QueryRow(ctx, `INSERT INTO users (id,name,email,password_hash) VALUES ($1,$2,$3,$4) RETURNING id,name,email,created_at,avatar_key`, id, name, email, passwordHash).Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.AvatarKey)
 	return u, err
 }
+// CreateUserWithReferral attributes a new registration to an existing account.
+func (r *Repository) CreateUserWithReferral(ctx context.Context, id, name, email, passwordHash, code, referrerID string) (User, error) {
+	var user User
+	err := r.db.QueryRow(ctx, `
+		INSERT INTO users(id, name, email, password_hash, referral_code, referred_by)
+		VALUES ($1, $2, $3, $4, $5, NULLIF($6, ''))
+		RETURNING id, name, email, created_at, avatar_key
+	`, id, name, email, passwordHash, code, referrerID).Scan(
+		&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.AvatarKey,
+	)
+	return user, err
+}
+
+func (r *Repository) LookupReferrer(ctx context.Context, code string) (string, error) {
+	var id string
+	err := r.db.QueryRow(ctx, `SELECT id FROM users WHERE referral_code = $1`, code).Scan(&id)
+	return id, err
+}
+
 func (r *Repository) FindUserByEmail(ctx context.Context, email string) (User, string, error) {
 	var u User
 	var hash string
