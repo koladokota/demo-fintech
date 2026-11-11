@@ -972,6 +972,7 @@
           request("/api/shop/inventory", { headers: { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) } })
         ]);
         inventory = owned;
+        render();
         grid.replaceChildren();
 
         for (const item of items) {
@@ -1012,22 +1013,20 @@
 
               await request("/api/shop/buy", {
                 method: "POST",
-                headers: {
-                  Authorization: "Bearer " + token
-                },
-                body: JSON.stringify({
-                  item_id: item.id
-                })
+                headers: { Authorization: "Bearer " + token },
+                body: JSON.stringify({ item_id: item.id })
               });
-
-              await loadWallet();
-              await loadInventory();
               button.textContent = "Уже куплено";
               button.disabled = true;
+              card.classList.add("owned");
               toast("Предмет приобретён: " + item.name);
 
+              const updates = await Promise.allSettled([loadWallet(), loadInventory()]);
+              if (updates.some(update => update.status === "rejected")) {
+                toast("Покупка прошла, но данные не обновились. Перезагрузите страницу.");
+              }
             } catch (error) {
-              toast("Ошибка: " + error.message);
+              toast("Ошибка покупки: " + error.message);
               button.disabled = false;
             }
           };
@@ -1051,6 +1050,7 @@
         inventory = await request("/api/shop/inventory", {
           headers: { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) }
         });
+        render();
         grid.replaceChildren();
         if (!inventory.length) {
           grid.innerHTML = '<div class="empty">Пока нет приобретённых предметов</div>';
@@ -1082,6 +1082,8 @@
       const progress = await request("/api/progression", {
         headers: { Authorization: "Bearer " + token }
       });
+      playerProgress = progress;
+      render();
 
       document.getElementById("playerLevel").textContent = "Уровень " + progress.level;
       document.getElementById("playerXP").textContent =
@@ -1125,6 +1127,7 @@
       const controls = document.getElementById("numberGameControls");
 
       start.disabled = active;
+      document.getElementById("sendNumberGuess").disabled = !active;
       start.textContent = active ? "Игра идёт" : (game.status === "none" ? "Играть" : "Новая игра");
       controls.classList.toggle("hidden", !active);
 
