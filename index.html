@@ -45,6 +45,13 @@
     .brand-note { font-size: 11px; color: var(--muted); }
     .account { display: flex; align-items: center; gap: 12px; }
     .account-name { max-width: 175px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .header-balance {
+      display: inline-flex; align-items: baseline; gap: 5px; flex: 0 0 auto;
+      white-space: nowrap; padding: 7px 10px; border: 1px solid var(--border);
+      border-radius: 10px; background: var(--surface); font-size: 14px; font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+    .header-balance-unit { font-size: 11px; font-weight: 450; color: var(--muted); }
     .avatar {
       display: inline-grid; place-items: center; flex-shrink: 0;
       width: 38px; height: 38px; border-radius: 12px;
@@ -102,17 +109,9 @@
     }
     .profile-card { min-width: 0; }
     .activity-card { min-width: 0; }
-    .profile-identity { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .profile-identity { display: flex; align-items: center; gap: 12px; }
     .profile-identity .identity { min-width: 0; }
     .profile-identity .identity strong { font-size: 21px; overflow-wrap: anywhere; }
-    .icon-button {
-      flex: 0 0 auto; display: inline-grid; place-items: center; width: 38px; height: 38px;
-      background: transparent; border: 1px solid var(--border); border-radius: 11px;
-      color: var(--muted);
-    }
-    .icon-button:hover { border-color: var(--accent); color: var(--accent); }
-    .icon-button svg { width: 19px; height: 19px; fill: none; stroke: currentColor;
-      stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .wallet-summary { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
     .activity-card .wallet-history { margin-top: 4px; }
     .activity-card .wallet-history li { gap: 8px; }
@@ -145,6 +144,10 @@
       font-weight: 500; line-height: 1; display: inline-grid; place-items: center;
     }
     .wallet-shortcut:hover, .wallet-shortcut.active { border-color: var(--accent); color: var(--accent); }
+    .wallet-shortcut svg {
+      width: 19px; height: 19px; fill: none; stroke: currentColor;
+      stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    }
     .wallet-page-panel { max-width: 590px; }
     .wallet-page-panel .input { max-width: 300px; }
     .wallet-page-panel .field { margin: 22px 0 14px; }
@@ -187,6 +190,9 @@
       .account { gap: 6px; }
       .header-wallet-actions { gap: 5px; margin-left: 0; }
       .wallet-shortcut { width: 32px; height: 34px; font-size: 20px; }
+      .header-balance { font-size: 12px; padding: 7px; }
+      .header-balance-unit { display: none; }
+      .wallet-shortcut svg { width: 17px; height: 17px; }
       .button.text { padding: 5px; }
 
       .topbar { min-height: 50px; }
@@ -211,11 +217,22 @@
       <div id="topUser" class="account hidden">
         <span id="topAvatar" class="avatar">R</span>
         <span id="topName" class="account-name"></span>
-        <div class="header-wallet-actions" aria-label="Операции с балансом">
+        <span class="header-balance" aria-label="Игровой баланс">
+          <span id="walletHeaderBalance" role="status">—</span>
+          <span class="header-balance-unit">монет</span>
+        </span>
+        <div class="header-wallet-actions" aria-label="Операции с балансом и настройки">
           <button class="wallet-shortcut" id="openWalletDeposit" type="button"
             title="Пополнить баланс" aria-label="Пополнить баланс" aria-pressed="false">+</button>
           <button class="wallet-shortcut" id="openWalletWithdraw" type="button"
             title="Вывести с баланса" aria-label="Вывести с баланса" aria-pressed="false">−</button>
+          <button class="wallet-shortcut" id="openProfileSettings" type="button"
+            title="Настройки профиля" aria-label="Настройки профиля" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.5"/>
+              <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.9 1.9-.06-.06A1.7 1.7 0 0 0 16 18.43a1.7 1.7 0 0 0-1.02 1.58V21h-2.7v-.1A1.7 1.7 0 0 0 10.7 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 0 0 6.57 16a1.7 1.7 0 0 0-1.58-1.02H4v-2.7h.1A1.7 1.7 0 0 0 5.7 10.7a1.7 1.7 0 0 0-.34-1.88L5.3 8.76l1.9-1.9.06.06A1.7 1.7 0 0 0 9 7.26a1.7 1.7 0 0 0 1.02-1.58V4h2.7v.1A1.7 1.7 0 0 0 14.3 5.7a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.9 1.9-.06.06A1.7 1.7 0 0 0 17.74 9a1.7 1.7 0 0 0 1.58 1.02H20v2.7h-.1A1.7 1.7 0 0 0 18.3 14.3Z"/>
+            </svg>
+          </button>
         </div>
         <button class="button text" id="logoutBtn" type="button">Выйти</button>
       </div>
@@ -288,13 +305,6 @@
                   <span id="profileAvatar" class="avatar big">R</span>
                   <strong id="profileName">Игрок</strong>
                 </div>
-                <button class="icon-button" id="openProfileSettings" type="button"
-                  aria-label="Настройки профиля" title="Настройки профиля">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
-                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.9 1.9-.06-.06A1.7 1.7 0 0 0 16 18.43a1.7 1.7 0 0 0-1.02 1.58V21h-2.7v-.1A1.7 1.7 0 0 0 10.7 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 0 0 6.57 16a1.7 1.7 0 0 0-1.58-1.02H4v-2.7h.1A1.7 1.7 0 0 0 5.7 10.7a1.7 1.7 0 0 0-.34-1.88L5.3 8.76l1.9-1.9.06.06A1.7 1.7 0 0 0 9 7.26a1.7 1.7 0 0 0 1.02-1.58V4h2.7v.1A1.7 1.7 0 0 0 14.3 5.7a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.9 1.9-.06.06A1.7 1.7 0 0 0 17.74 9a1.7 1.7 0 0 0 1.58 1.02H20v2.7h-.1A1.7 1.7 0 0 0 18.3 14.3Z"/>
-                  </svg>
-                </button>
               </div>
               <div class="wallet-summary">
                 <span class="hint">Игровой баланс</span>
@@ -499,6 +509,8 @@
         shortcut.classList.toggle("active", page === kind);
         shortcut.setAttribute("aria-pressed", String(page === kind));
       }
+      el("openProfileSettings").classList.toggle("active", page === "settings");
+      el("openProfileSettings").setAttribute("aria-pressed", String(page === "settings"));
       document.querySelectorAll("main > section").forEach(node => {
         node.classList.toggle("hidden", node.id !== "page-" + page);
       });
@@ -540,7 +552,15 @@
       el("authView").classList.add("hidden");
       el("appView").classList.remove("hidden");
       el("topUser").classList.remove("hidden");
-      changePage(sessionStorage.getItem(PAGE_PREFIX + currentUser.id) || "games");
+      walletBalance = null;
+      el("walletHeaderBalance").textContent = "—";
+      const initialPage = sessionStorage.getItem(PAGE_PREFIX + currentUser.id) || "games";
+      changePage(initialPage);
+      if (!["profile", "deposit", "withdraw"].includes(initialPage)) {
+        loadWalletData().catch(error => {
+          toast("Не удалось загрузить баланс: " + error.message);
+        });
+      }
     }
 
     function setAuthMode(mode) {
@@ -617,6 +637,7 @@
       game = null;
       walletDemoEnabled = false;
       walletBalance = null;
+      el("walletHeaderBalance").textContent = "—";
       el("walletBalance").textContent = "—";
       el("walletDepositBalance").textContent = "—";
       el("walletWithdrawBalance").textContent = "—";
@@ -710,6 +731,14 @@
       return Number(value).toLocaleString("ru-RU") + " монет";
     }
 
+    function setWalletBalance(balance) {
+      walletBalance = balance;
+      el("walletHeaderBalance").textContent = Number(balance).toLocaleString("ru-RU");
+      for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
+        el(id).textContent = coins(balance);
+      }
+    }
+
     function walletStatus(kind, message) {
       el(kind === "deposit" ? "walletDepositStatus" : "walletWithdrawStatus").textContent = message;
     }
@@ -723,11 +752,8 @@
       ]);
       if (!currentUser || currentUser.id !== userID) return;
 
-      walletBalance = wallet.balance;
+      setWalletBalance(wallet.balance);
       walletDemoEnabled = features.demo_credits_enabled === true;
-      for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
-        el(id).textContent = coins(walletBalance);
-      }
       el("walletDepositSubmit").disabled = !walletDemoEnabled || walletTransferPending;
       el("walletWithdrawSubmit").disabled = !walletDemoEnabled || walletTransferPending;
       el("walletDepositNotice").textContent = walletDemoEnabled
@@ -792,10 +818,7 @@
           body: JSON.stringify({ kind, amount })
         });
         if (!currentUser || currentUser.id !== beforeUser) return;
-        walletBalance = result.balance;
-        for (const id of ["walletBalance", "walletDepositBalance", "walletWithdrawBalance"]) {
-          el(id).textContent = coins(result.balance);
-        }
+        setWalletBalance(result.balance);
         walletStatus(kind, deposit
           ? "Виртуальный баланс пополнен на " + coins(result.amount) + "."
           : "Списано " + coins(result.amount) + ". Перевода денежных средств нет.");

@@ -59,7 +59,6 @@ func TestWalletPagesAreIndependentOfProfile(t *testing.T) {
 	for _, expected := range []string{
 		`id="profileAvatar"`, `id="profileName"`, `id="walletBalance"`,
 		`id="walletHistory"`, `class="profile-layout"`, `class="card activity-card"`,
-		`id="openProfileSettings"`,
 	} {
 		if !strings.Contains(profile, expected) {
 			t.Errorf("profile missing expected element %q", expected)
@@ -67,7 +66,7 @@ func TestWalletPagesAreIndependentOfProfile(t *testing.T) {
 	}
 	for _, forbidden := range []string{"walletDepositForm", "walletWithdrawForm", "walletDepositPanel",
 		"walletWithdrawPanel", "profileSettingsForm", "profileStats", "profileAchievements",
-		"playerXP", "claimDailyXP", `<h1>Профиль</h1>`} {
+		"playerXP", "claimDailyXP", `<h1>Профиль</h1>`, `id="openProfileSettings"`} {
 		if strings.Contains(profile, forbidden) {
 			t.Errorf("profile still contains unwanted element %q", forbidden)
 		}
@@ -84,6 +83,33 @@ func TestWalletPagesAreIndependentOfProfile(t *testing.T) {
 	}
 	if strings.Contains(html, `id="profileAchievements"`) {
 		t.Error("achievements should not be visible in the minimalist UI")
+	}
+
+	// The balance appears after the username but before +/- and the settings gear.
+	headerStart := strings.Index(html, `<header class="topbar">`)
+	headerEnd := strings.Index(html, "</header>")
+	if headerStart < 0 || headerEnd <= headerStart {
+		t.Fatal("topbar header not found")
+	}
+	header := html[headerStart:headerEnd]
+	ordered := []string{
+		`id="topName"`, `id="walletHeaderBalance"`,
+		`id="openWalletDeposit"`, `id="openWalletWithdraw"`,
+		`id="openProfileSettings"`, `id="logoutBtn"`,
+	}
+	position := -1
+	for _, element := range ordered {
+		next := strings.Index(header, element)
+		if next <= position {
+			t.Errorf("header element missing or out of order: %s", element)
+		}
+		position = next
+	}
+	if !strings.Contains(header, `aria-label="Настройки профиля"`) {
+		t.Error("header gear must have an accessible label")
+	}
+	if !strings.Contains(html, `el("walletHeaderBalance").textContent = Number(balance).toLocaleString("ru-RU")`) {
+		t.Error("header balance is not synchronized with the API balance")
 	}
 
 	ids := regexp.MustCompile(`id="([^"]+)"`).FindAllStringSubmatch(html, -1)
