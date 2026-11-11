@@ -39,6 +39,7 @@ func main() {
 		jsonResponse(w, map[string]bool{"demo_credits_enabled": cfg.DemoCredits})
 	})
 	mux.Handle("/api/me", auth(http.HandlerFunc(h.Me)))
+	mux.Handle("/api/profile", auth(http.HandlerFunc(h.Profile)))
 	mux.Handle("/api/wallet", auth(http.HandlerFunc(h.Wallet)))
 	mux.Handle("/api/wallet/demo-add", auth(http.HandlerFunc(h.DemoAdd)))
 	mux.Handle("/api/wallet/demo-spend", auth(http.HandlerFunc(h.DemoSpend)))

@@ -12,13 +12,13 @@ type Repository struct{ db *pgxpool.Pool }
 
 func (r *Repository) CreateUser(ctx context.Context, id, name, email, passwordHash string) (User, error) {
 	var u User
-	err := r.db.QueryRow(ctx, `INSERT INTO users (id,name,email,password_hash) VALUES ($1,$2,$3,$4) RETURNING id,name,email,created_at`, id, name, email, passwordHash).Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt)
+	err := r.db.QueryRow(ctx, `INSERT INTO users (id,name,email,password_hash) VALUES ($1,$2,$3,$4) RETURNING id,name,email,created_at,avatar_key`, id, name, email, passwordHash).Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.AvatarKey)
 	return u, err
 }
 func (r *Repository) FindUserByEmail(ctx context.Context, email string) (User, string, error) {
 	var u User
 	var hash string
-	err := r.db.QueryRow(ctx, `SELECT id,name,email,password_hash,created_at FROM users WHERE email=$1`, email).Scan(&u.ID, &u.Name, &u.Email, &hash, &u.CreatedAt)
+	err := r.db.QueryRow(ctx, `SELECT id,name,email,password_hash,created_at,avatar_key FROM users WHERE email=$1`, email).Scan(&u.ID, &u.Name, &u.Email, &hash, &u.CreatedAt, &u.AvatarKey)
 	return u, hash, err
 }
 func (r *Repository) RevokeSession(ctx context.Context, userID, tokenHash string) error {
@@ -38,7 +38,7 @@ func (r *Repository) CreateSession(ctx context.Context, userID, tokenHash string
 }
 func (r *Repository) UserByToken(ctx context.Context, tokenHash string) (User, error) {
 	var u User
-	err := r.db.QueryRow(ctx, `SELECT u.id,u.name,u.email,u.created_at FROM users u JOIN sessions s ON s.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at>NOW()`, tokenHash).Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt)
+	err := r.db.QueryRow(ctx, `SELECT u.id,u.name,u.email,u.created_at,u.avatar_key FROM users u JOIN sessions s ON s.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at>NOW()`, tokenHash).Scan(&u.ID, &u.Name, &u.Email, &u.CreatedAt, &u.AvatarKey)
 	return u, err
 }
 func (r *Repository) Wallet(ctx context.Context, userID string) (int64, []Transaction, error) {

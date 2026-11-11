@@ -361,6 +361,90 @@
       font-weight: 800
     }
 
+    .profile-settings {
+      max-width: 620px;
+      margin-top: 16px;
+    }
+
+    .profile-settings .field {
+      margin-top: 0;
+    }
+
+    .profile-settings .field input {
+      max-width: 100%;
+    }
+
+    .avatar-choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 10px 0 18px;
+    }
+
+    .avatar-choice {
+      width: 50px;
+      height: 50px;
+      font-size: 23px;
+      display: grid;
+      place-items: center;
+      background: #202d42;
+      color: var(--text);
+      border: 2px solid var(--line);
+    }
+
+    .avatar-choice.selected {
+      border-color: var(--accent);
+      background: #183c37;
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .profile-stat {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel2);
+    }
+
+    .profile-stat strong {
+      font-size: 22px;
+      display: block;
+    }
+
+    .achievement-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .achievement {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel2);
+    }
+
+    .achievement.locked {
+      opacity: .6;
+    }
+
+    .achievement-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    @media(max-width:580px) {
+      .profile-stats,
+      .achievement-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .toast {
       position: fixed;
       bottom: 20px;
@@ -569,6 +653,30 @@
             <p class="muted">Ежедневная активность: +25 XP один раз за календарные сутки по UTC.</p>
             <button id="claimDailyXP" class="secondary" style="margin-top:12px">Получить +25 XP</button>
           </div>
+          <form class="card profile-settings" id="profileSettingsForm">
+            <h2 class="section-title">Настройки профиля</h2>
+            <label class="field" for="profileNameInput">
+              <span>Отображаемое имя</span>
+              <input id="profileNameInput" type="text" minlength="2" maxlength="32" required
+                placeholder="От 2 до 32 символов">
+            </label>
+            <div class="muted">Выбери аватар</div>
+            <div class="avatar-choices" id="avatarChoices" role="group" aria-label="Выбор аватара"></div>
+            <button id="profileSaveButton" type="submit">Сохранить изменения</button>
+            <p id="profileSaveStatus" class="muted" role="status" style="margin-top:10px"></p>
+          </form>
+          <div class="card" style="margin-top:16px">
+            <h2 class="section-title">Статистика</h2>
+            <div id="profileStats" class="profile-stats">
+              <span class="muted">Загрузка статистики...</span>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <h2 class="section-title">Достижения</h2>
+            <div id="profileAchievements" class="achievement-list">
+              <span class="muted">Загрузка достижений...</span>
+            </div>
+          </div>
         </div>
       </main>
     </section>
@@ -581,6 +689,7 @@
     let demo = { balance: 0, transactions: [] };
     let inventory = [];
     let playerProgress = null;
+    let selectedAvatarKey = "initial";
 
     const TOKEN_KEY = "demo_fintech_token";
     const PAGE_KEY_PREFIX = "demo_fintech_page_";
@@ -628,6 +737,17 @@
       return Number(value || 0).toLocaleString("ru-RU") + " монет";
     }
 
+    function avatarSymbol(key, name) {
+      const symbols = {
+        rocket: "🚀",
+        planet: "🪐",
+        bolt: "⚡",
+        star: "⭐",
+        shield: "🛡️"
+      };
+      return symbols[key] || (String(name || "U").charAt(0).toUpperCase());
+    }
+
     function showApp() {
       document.getElementById("authView").classList.add("hidden");
       document.getElementById("appView").classList.remove("hidden");
@@ -651,7 +771,7 @@
 
       document.getElementById("topName").textContent = u.name;
       document.getElementById("topAvatar").textContent =
-        u.name[0].toUpperCase();
+        avatarSymbol(u.avatar_key, u.name);
 
       document.getElementById("balanceMetric").textContent =
         money(demo.balance);
@@ -673,7 +793,7 @@
       document.getElementById("profileEmail").textContent = u.email;
 
       document.getElementById("profileAvatar").textContent =
-        u.name[0].toUpperCase();
+        avatarSymbol(u.avatar_key, u.name);
 
       document.getElementById("createdAt").textContent =
         new Date(u.created_at).toLocaleDateString("ru-RU");
@@ -802,7 +922,7 @@
     }
 
     async function refreshAccountData() {
-      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress()]);
+      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress(), loadProfile()]);
       if (results.some(result => result.status === "rejected")) {
         toast("Часть данных не загрузилась. Попробуйте обновить страницу.");
       }
@@ -1108,6 +1228,7 @@
           headers: { Authorization: "Bearer " + token }
         });
         await loadProgress();
+        await loadProfile();
         toast("Получено 25 XP!");
       } catch (error) {
         toast("Не удалось получить XP: " + error.message);
@@ -1115,10 +1236,135 @@
       }
     };
 
+    const avatarOptions = [
+      { key: "initial", title: "Первая буква имени" },
+      { key: "rocket", title: "Ракета" },
+      { key: "planet", title: "Планета" },
+      { key: "bolt", title: "Молния" },
+      { key: "star", title: "Звезда" },
+      { key: "shield", title: "Щит" }
+    ];
+
+    function renderAvatarChoices() {
+      const container = document.getElementById("avatarChoices");
+      container.replaceChildren();
+      for (const option of avatarOptions) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "avatar-choice" +
+          (selectedAvatarKey === option.key ? " selected" : "");
+        button.title = option.title;
+        button.setAttribute("aria-label", option.title);
+        button.setAttribute("aria-pressed", String(selectedAvatarKey === option.key));
+        button.textContent = avatarSymbol(option.key, document.getElementById("profileNameInput").value);
+        button.onclick = () => {
+          selectedAvatarKey = option.key;
+          renderAvatarChoices();
+        };
+        container.appendChild(button);
+      }
+    }
+
+    function profileStatNode(title, value) {
+      const node = document.createElement("div");
+      node.className = "profile-stat";
+      const valueNode = document.createElement("strong");
+      valueNode.textContent = Number(value ?? 0).toLocaleString("ru-RU");
+      const titleNode = document.createElement("span");
+      titleNode.className = "muted";
+      titleNode.textContent = title;
+      node.append(valueNode, titleNode);
+      return node;
+    }
+
+    function applyProfile(profile) {
+      currentUser = profile.user;
+      render();
+
+      const input = document.getElementById("profileNameInput");
+      input.value = profile.user.name;
+      selectedAvatarKey = profile.user.avatar_key || "initial";
+      renderAvatarChoices();
+
+      const stats = profile.stats;
+      const statsContainer = document.getElementById("profileStats");
+      statsContainer.replaceChildren(
+        profileStatNode("Уровень", stats.level),
+        profileStatNode("Общий XP", stats.total_xp),
+        profileStatNode("Предметы", stats.items_owned),
+        profileStatNode("Завершено игр", stats.games_finished),
+        profileStatNode("Побед", stats.games_won),
+        profileStatNode("Ежедневных наград", stats.daily_checkins)
+      );
+
+      const achievements = document.getElementById("profileAchievements");
+      achievements.replaceChildren();
+      for (const item of profile.achievements) {
+        const card = document.createElement("div");
+        card.className = "achievement" + (item.unlocked ? "" : " locked");
+        const title = document.createElement("div");
+        title.className = "achievement-title";
+        title.textContent = (item.unlocked ? "✓ " : "○ ") + item.title;
+        const description = document.createElement("div");
+        description.className = "muted";
+        description.textContent = item.description;
+        card.append(title, description);
+        achievements.appendChild(card);
+      }
+    }
+
+    async function loadProfile() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token || !currentUser) return;
+      const profile = await request("/api/profile", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (currentUser && currentUser.id === profile.user.id) {
+        applyProfile(profile);
+      }
+    }
+
+    document.getElementById("profileSettingsForm").onsubmit = async event => {
+      event.preventDefault();
+      const button = document.getElementById("profileSaveButton");
+      const status = document.getElementById("profileSaveStatus");
+      const name = document.getElementById("profileNameInput").value.trim();
+      if (Array.from(name).length < 2 || Array.from(name).length > 32) {
+        status.textContent = "Имя должно содержать от 2 до 32 символов.";
+        return;
+      }
+
+      button.disabled = true;
+      status.textContent = "Сохранение...";
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const profile = await request("/api/profile", {
+          method: "PATCH",
+          headers: { Authorization: "Bearer " + token },
+          body: JSON.stringify({ name, avatar_key: selectedAvatarKey })
+        });
+        applyProfile(profile);
+        status.textContent = "Настройки сохранены.";
+        toast("Профиль обновлён");
+      } catch (error) {
+        status.textContent = "Ошибка сохранения: " + error.message;
+      } finally {
+        button.disabled = false;
+      }
+    };
+
+    document.getElementById("profileNameInput").addEventListener("input", () => {
+      if (selectedAvatarKey === "initial") renderAvatarChoices();
+    });
+
     document.querySelector('[data-page="profile"]')
-      .addEventListener("click", () => loadProgress().catch(error => {
-        toast("Не удалось загрузить уровень: " + error.message);
-      }));
+      .addEventListener("click", () => {
+        Promise.allSettled([loadProgress(), loadProfile()]).then(results => {
+          if (results.some(r => r.status === "rejected")) {
+            toast("Не удалось обновить данные профиля.");
+          }
+        });
+      });
 
     function renderNumberGame() {
       const game = numberGame || { status: "none", attempts_left: 0 };
@@ -1200,6 +1446,7 @@
             ? "Правильно! Получено +" + numberGame.xp_awarded + " XP."
             : "Правильно! Сегодня награда за игру уже получена.";
           loadProgress().catch(() => {});
+          loadProfile().catch(() => {});
         } else if (numberGame.status === "lost") {
           numberGameFeedback = "Игра окончена. Попробуй ещё раз!";
         } else {
