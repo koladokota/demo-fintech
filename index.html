@@ -457,6 +457,7 @@
           <button class="active" data-page="overview">▦ Обзор</button>
           <button data-page="shop">🛒 Магазин</button>
           <button data-page="inventory">🎒 Инвентарь</button>
+          <button data-page="games">🎮 Игры</button>
           <button data-page="referrals">♧ Рефералы</button>
           <button data-page="transactions">↕ Операции</button>
           <button data-page="profile">◎ Профиль</button>
@@ -512,6 +513,29 @@
           <h1>Инвентарь</h1>
           <p class="sub">Предметы, которые вы приобрели</p>
           <div id="inventoryGrid" class="grid"></div>
+        </div>
+        <div id="page-games" class="hidden">
+          <h1>Игры</h1>
+          <p class="sub">Небольшие игры с виртуальным опытом за достижения</p>
+          <div class="card" style="max-width:680px">
+            <div class="row">
+              <div>
+                <h2 class="section-title">Угадай код</h2>
+                <p class="muted">Число от 1 до 20. У тебя 5 попыток. За первую победу в сутки: +10 XP.</p>
+              </div>
+              <button id="startNumberGame">Играть</button>
+            </div>
+            <p id="numberGameStatus" class="muted" style="margin-top:18px" role="status">Загрузка...</p>
+            <div id="numberGameControls" class="hidden" style="margin-top:18px">
+              <label for="numberGameGuess" class="muted">Твоя догадка (1–20)</label>
+              <div class="actions" style="margin-top:10px">
+                <input id="numberGameGuess" type="number" min="1" max="20" step="1" value="10"
+                  style="max-width:140px" aria-label="Число от 1 до 20">
+                <button id="sendNumberGuess">Проверить</button>
+              </div>
+            </div>
+            <p id="numberGameHint" style="margin-top:16px" aria-live="polite"></p>
+          </div>
         </div>
         <div id="page-referrals" class="hidden">
           <h1>Реферальная программа</h1>
@@ -596,6 +620,8 @@
 
     const TOKEN_KEY = "demo_fintech_token";
     const PAGE_KEY_PREFIX = "demo_fintech_page_";
+    let numberGame = null;
+    let numberGameFeedback = "";
 
     async function request(url, options = {}) {
       const response = await fetch(API + url, {
@@ -1149,6 +1175,112 @@
       .addEventListener("click", () => loadProgress().catch(error => {
         toast("Не удалось загрузить уровень: " + error.message);
       }));
+
+    function renderNumberGame() {
+      const game = numberGame || { status: "none", attempts_left: 0 };
+      const active = game.status === "active";
+      const start = document.getElementById("startNumberGame");
+      const controls = document.getElementById("numberGameControls");
+
+      start.disabled = active;
+      start.textContent = active ? "Игра идёт" : (game.status === "none" ? "Играть" : "Новая игра");
+      controls.classList.toggle("hidden", !active);
+
+      const status = document.getElementById("numberGameStatus");
+      if (active) {
+        status.textContent = "Попыток осталось: " + game.attempts_left + " из 5";
+      } else if (game.status === "won") {
+        status.textContent = "Победа! Загаданное число: " + game.secret_number;
+      } else if (game.status === "lost") {
+        status.textContent = "Попытки закончились. Загаданное число: " + game.secret_number;
+      } else {
+        status.textContent = "Нажми «Играть», чтобы начать.";
+      }
+
+      document.getElementById("numberGameHint").textContent = numberGameFeedback;
+    }
+
+    async function loadNumberGame() {
+      if (!currentUser) return;
+      const token = localStorage.getItem(TOKEN_KEY);
+      numberGame = await request("/api/game/current", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      numberGameFeedback = "";
+      renderNumberGame();
+    }
+
+    document.getElementById("startNumberGame").onclick = async () => {
+      const button = document.getElementById("startNumberGame");
+      button.disabled = true;
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        numberGame = await request("/api/game/start", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token }
+        });
+        numberGameFeedback = "Угадай число. Удачи!";
+        renderNumberGame();
+        document.getElementById("numberGameGuess").focus();
+      } catch (error) {
+        numberGameFeedback = "Не удалось начать игру: " + error.message;
+        renderNumberGame();
+      } finally {
+        button.disabled = numberGame?.status === "active";
+      }
+    };
+
+    document.getElementById("sendNumberGuess").onclick = async () => {
+      if (!numberGame || numberGame.status !== "active") return;
+      const input = document.getElementById("numberGameGuess");
+      const value = Number(input.value);
+      if (!Number.isInteger(value) || value < 1 || value > 20 || input.value.trim() === "") {
+        numberGameFeedback = "Введи целое число от 1 до 20.";
+        renderNumberGame();
+        return;
+      }
+
+      const button = document.getElementById("sendNumberGuess");
+      button.disabled = true;
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        numberGame = await request("/api/game/guess", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token },
+          body: JSON.stringify({ game_id: numberGame.game_id, guess: value })
+        });
+
+        if (numberGame.status === "won") {
+          numberGameFeedback = numberGame.xp_awarded > 0
+            ? "Правильно! Получено +" + numberGame.xp_awarded + " XP."
+            : "Правильно! Сегодня награда за игру уже получена.";
+          loadProgress().catch(() => {});
+        } else if (numberGame.status === "lost") {
+          numberGameFeedback = "Игра окончена. Попробуй ещё раз!";
+        } else {
+          numberGameFeedback = numberGame.result === "higher"
+            ? "Загаданное число больше."
+            : "Загаданное число меньше.";
+        }
+        renderNumberGame();
+      } catch (error) {
+        numberGameFeedback = "Ошибка: " + error.message;
+        renderNumberGame();
+      } finally {
+        button.disabled = numberGame?.status !== "active";
+      }
+    };
+
+    document.getElementById("numberGameGuess").addEventListener("keydown", event => {
+      if (event.key === "Enter") document.getElementById("sendNumberGuess").click();
+    });
+
+    document.querySelector('[data-page="games"]').addEventListener("click", () => {
+      loadNumberGame().catch(error => {
+        numberGameFeedback = "Не удалось загрузить игру: " + error.message;
+        renderNumberGame();
+      });
+    });
 
     setMode("login");
     checkAuth();
