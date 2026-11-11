@@ -548,6 +548,16 @@
             <div class="row" style="margin-top:12px"><span class="muted">ID аккаунта</span><span id="profileId"></span>
             </div>
           </div>
+          <div class="card" style="max-width:620px;margin-top:16px">
+            <h2 class="section-title">Уровень игрока</h2>
+            <div class="row">
+              <strong id="playerLevel">Уровень 1</strong>
+              <span class="muted" id="playerXP">0 / 100 XP</span>
+            </div>
+            <progress id="playerXPBar" value="0" max="100" style="width:100%;height:18px;margin:14px 0"></progress>
+            <p class="muted">Ежедневная активность: +25 XP один раз за календарные сутки по UTC.</p>
+            <button id="claimDailyXP" class="secondary" style="margin-top:12px">Получить +25 XP</button>
+          </div>
         </div>
         <div id="page-admin" class="hidden">
           <h1>Демо-администрирование</h1>
@@ -783,6 +793,7 @@
 
         showApp();
         await loadWallet();
+        await loadProgress();
         toast(mode === "login" ? "Вы вошли в аккаунт" : "Аккаунт создан");
 
       } catch (error) {
@@ -837,6 +848,11 @@
         await loadInventory();
       } catch (error) {
         toast("Не удалось загрузить инвентарь: " + error.message);
+      }
+      try {
+        await loadProgress();
+      } catch (error) {
+        toast("Не удалось загрузить уровень: " + error.message);
       }
     }
 
@@ -1070,6 +1086,49 @@
       .querySelector('[data-page="inventory"]')
       .addEventListener("click", loadInventory);
 
+
+    async function loadProgress() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) return;
+
+      const progress = await request("/api/progression", {
+        headers: { Authorization: "Bearer " + token }
+      });
+
+      document.getElementById("playerLevel").textContent = "Уровень " + progress.level;
+      document.getElementById("playerXP").textContent =
+        progress.xp_in_level + " / " + progress.xp_for_next_level +
+        " XP (всего " + progress.total_xp + ")";
+      const bar = document.getElementById("playerXPBar");
+      bar.max = progress.xp_for_next_level;
+      bar.value = progress.xp_in_level;
+
+      const button = document.getElementById("claimDailyXP");
+      button.disabled = progress.claimed_today;
+      button.textContent = progress.claimed_today ? "Сегодня уже получено" : "Получить +25 XP";
+    }
+
+    document.getElementById("claimDailyXP").onclick = async () => {
+      const button = document.getElementById("claimDailyXP");
+      button.disabled = true;
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        await request("/api/progression/check-in", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token }
+        });
+        await loadProgress();
+        toast("Получено 25 XP!");
+      } catch (error) {
+        toast("Не удалось получить XP: " + error.message);
+        await loadProgress().catch(() => { button.disabled = false; });
+      }
+    };
+
+    document.querySelector('[data-page="profile"]')
+      .addEventListener("click", () => loadProgress().catch(error => {
+        toast("Не удалось загрузить уровень: " + error.message);
+      }));
 
     setMode("login");
     checkAuth();
