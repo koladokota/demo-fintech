@@ -468,6 +468,355 @@
     .wallet-history-amount.positive { color: #ecadff; }
     .wallet-history-amount.negative { color: #d2b5d5; }
 
+  
+    /* Controls & motion */
+    .button {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 211, 254, .35);
+      border-radius: 12px;
+      background: var(--gradient);
+      background-size: 180% 180%;
+      background-position: 7% 50%;
+      color: #211027;
+      font-weight: 780;
+      box-shadow: 0 8px 27px rgba(181, 83, 231, .20), inset 0 1px rgba(255,255,255,.31);
+      transition: transform .22s cubic-bezier(.2,.75,.25,1), box-shadow .24s ease,
+        border-color .24s ease, background-position .42s ease, opacity .22s ease;
+    }
+    .button:not(:disabled):hover {
+      transform: translateY(-2px);
+      filter: none;
+      background-position: 92% 50%;
+      box-shadow: 0 11px 33px rgba(212, 90, 224, .29), inset 0 1px rgba(255,255,255,.35);
+    }
+    .button:not(:disabled):active { transform: translateY(0) scale(.975); }
+    .button.secondary {
+      border-color: rgba(203, 163, 238, .24);
+      background: rgba(168, 99, 204, .085);
+      color: #f4e7fc;
+      box-shadow: inset 0 1px rgba(255,255,255,.04);
+    }
+    .button.secondary:not(:disabled):hover {
+      border-color: rgba(228, 165, 253, .46);
+      background: rgba(173, 105, 229, .18);
+      box-shadow: 0 6px 24px rgba(145, 66, 196, .14);
+    }
+    .button.text {
+      min-height: 36px;
+      border: 0;
+      padding: 7px 10px;
+      background: transparent;
+      color: #c1aecb;
+      box-shadow: none;
+    }
+    .button.text:not(:disabled):hover {
+      color: white;
+      background: rgba(207, 115, 238, .12);
+      transform: none;
+      box-shadow: none;
+    }
+    button:disabled {
+      opacity: .48;
+      filter: saturate(.5);
+      box-shadow: none;
+    }
+
+    .wallet-shortcut {
+      border-color: rgba(214, 166, 247, .20);
+      border-radius: 12px;
+      background: rgba(164, 99, 202, .075);
+      color: #f2e8fa;
+      box-shadow: inset 0 1px rgba(255,255,255,.035);
+      transition: transform .22s ease, background .23s ease,
+        color .23s ease, border-color .23s ease, box-shadow .23s ease;
+    }
+    .wallet-shortcut:hover,
+    .wallet-shortcut.active {
+      color: #fff8ff;
+      border-color: rgba(236, 171, 255, .49);
+      background: rgba(198, 99, 233, .18);
+      box-shadow: 0 0 21px rgba(206, 92, 237, .16);
+    }
+    .wallet-shortcut:not(:disabled):hover { transform: translateY(-2px); }
+    .wallet-shortcut:not(:disabled):active { transform: scale(.94); }
+
+    .avatar-choice {
+      border-color: rgba(217, 161, 247, .19);
+      border-radius: 14px;
+      background: linear-gradient(150deg, rgba(77, 49, 93, .48), rgba(34, 23, 46, .76));
+      transition: transform .22s ease, border-color .22s ease,
+        background .22s ease, box-shadow .22s ease;
+    }
+    .avatar-choice:not(:disabled):hover {
+      transform: translateY(-3px) scale(1.035);
+      border-color: rgba(235, 165, 255, .58);
+      box-shadow: 0 7px 25px rgba(177, 74, 215, .14);
+    }
+    .avatar-choice.selected {
+      background: linear-gradient(145deg, rgba(158, 75, 211, .44), rgba(88, 44, 135, .27));
+      border-color: #e0a2fb;
+      box-shadow: 0 0 0 3px rgba(208, 121, 241, .1);
+    }
+
+    .input {
+      min-height: 47px;
+      border: 1px solid rgba(216, 169, 255, .19);
+      border-radius: 12px;
+      background: rgba(13, 11, 22, .7);
+      color: #f9f4fd;
+      box-shadow: inset 0 1px 6px rgba(0,0,0,.13);
+      transition: border-color .22s ease, box-shadow .22s ease, background .22s ease;
+    }
+    .input::placeholder { color: #8d829e; }
+    .input:focus {
+      outline: none;
+      background: rgba(27, 19, 38, .9);
+      border-color: rgba(222, 160, 255, .66);
+      box-shadow: 0 0 0 4px rgba(215, 133, 245, .10);
+    }
+    button:focus-visible,
+    input:focus-visible,
+    .link:focus-visible,
+    .back-link:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 3px;
+    }
+    .field-label { color: #ddd1e8; }
+    .link { color: #e9a8f9; }
+    .link:hover { color: #ffd0ed; }
+    .back-link {
+      transition: transform .2s ease, color .2s ease;
+      color: #d9a0fb;
+    }
+    .back-link:hover { transform: translateX(-3px); color: #ffe1f8; }
+
+    .stat {
+      border-color: rgba(222, 180, 250, .14);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(164, 75, 186, .08), rgba(87, 62, 136, .04));
+      transition: transform .26s ease, border-color .26s ease;
+    }
+    .stat:hover { transform: translateY(-3px); border-color: rgba(231, 170, 255, .35); }
+    .stat strong { color: #faf2ff; font-weight: 790; }
+    .stat span { color: #ad9fbd; }
+    .divider { border-top-color: rgba(220, 173, 248, .12); }
+    progress {
+      appearance: none;
+      height: 10px;
+      border-radius: 100px;
+      overflow: hidden;
+      background: rgba(209, 168, 237, .1);
+      border: 1px solid rgba(206, 169, 230, .12);
+      accent-color: #d67af0;
+    }
+    progress::-webkit-progress-bar { background: rgba(209, 168, 237, .1); }
+    progress::-webkit-progress-value { background: var(--gradient); border-radius: 100px; }
+    progress::-moz-progress-bar { background: var(--gradient); border-radius: 100px; }
+    .ref-count {
+      display: inline-block;
+      margin-top: 13px;
+      background: linear-gradient(120deg, #fff 0%, #e3aeff 55%, #ffbd91 100%);
+      color: transparent;
+      background-clip: text;
+      -webkit-background-clip: text;
+    }
+    .wallet-history li { border-bottom-color: rgba(221, 161, 247, .10); }
+    .wallet-history-label strong { color: #f1e8fa; }
+    .wallet-history-label time { color: #a79ab9; }
+    .wallet-history-amount { font-variant-numeric: tabular-nums; }
+
+    .auth {
+      max-width: 466px;
+      margin: min(11vh, 92px) auto 0;
+      border-radius: 27px;
+      padding: 34px;
+      box-shadow: 0 35px 90px rgba(0, 0, 0, .42), 0 0 70px rgba(164, 61, 211, .09);
+      animation: authReveal .62s cubic-bezier(.18,.75,.2,1) both;
+    }
+    .auth h1 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      margin-top: 14px;
+    }
+    .auth::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      width: 180px;
+      height: 180px;
+      right: -45px;
+      top: -85px;
+      z-index: -1;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232, 103, 215, .24), transparent 65%);
+      filter: blur(23px);
+    }
+
+    #page-games {
+      max-width: 900px;
+    }
+    #page-games h1 {
+      display: inline-block;
+      background: linear-gradient(105deg, #fff 0%, #f2d6fa 60%, #f0b9cc);
+      color: transparent;
+      background-clip: text;
+      -webkit-background-clip: text;
+    }
+    #page-games > .card {
+      min-height: 270px;
+      border-color: rgba(214, 137, 250, .23);
+      background:
+        radial-gradient(ellipse at 95% 3%, rgba(190, 83, 224, .14), transparent 60%),
+        linear-gradient(150deg, rgba(37, 24, 52, .92), rgba(17, 16, 28, .96));
+    }
+    #page-games > .card::after {
+      content: "";
+      position: absolute;
+      right: 5%;
+      top: 2%;
+      width: 130px;
+      height: 130px;
+      z-index: -1;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(239, 123, 223, .20), transparent 70%);
+      filter: blur(18px);
+      animation: glowBreathe 7s ease-in-out infinite alternate;
+    }
+
+    .profile-card {
+      min-height: 235px;
+      border-color: rgba(220, 160, 250, .22);
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(210, 105, 210, .12), transparent 70%),
+        linear-gradient(145deg, rgba(39, 27, 50, .93), rgba(19, 17, 30, .96));
+    }
+    .activity-card { min-height: 235px; }
+    .wallet-summary .hint { color: #b1a4c3; }
+    .wallet-page-panel { border-color: rgba(222, 175, 249, .22); }
+
+    .toast {
+      border: 1px solid rgba(229, 160, 249, .42);
+      border-radius: 14px;
+      padding: 14px 19px;
+      background: linear-gradient(130deg, rgba(65, 31, 82, .96), rgba(32, 25, 47, .97));
+      box-shadow: 0 20px 60px rgba(0,0,0,.4), 0 0 27px rgba(212, 94, 229, .1);
+      backdrop-filter: blur(15px);
+    }
+    .toast:not(.hidden) { animation: toastEnter .35s cubic-bezier(.2,.8,.2,1) both; }
+
+    .page:not(.hidden) > .card,
+    .page:not(.hidden) .profile-layout > .card,
+    .page:not(.hidden) .stack > .card {
+      animation: cardRise .52s cubic-bezier(.18,.82,.2,1) both;
+    }
+    .page:not(.hidden) .profile-layout > .card:nth-child(2),
+    .page:not(.hidden) .stack > .card:nth-child(2) { animation-delay: .075s; }
+    .page:not(.hidden) .stack > .card:nth-child(3) { animation-delay: .13s; }
+
+    .balance-pop { animation: balancePulse .58s cubic-bezier(.16,.7,.32,1); }
+
+    @keyframes auroraFloat {
+      0% { transform: translate3d(0,0,0) scale(1); }
+      100% { transform: translate3d(-90px,95px,0) scale(1.16); }
+    }
+    @keyframes glowBreathe {
+      from { opacity: .45; transform: scale(.82); }
+      to { opacity: .9; transform: scale(1.2); }
+    }
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translate3d(0,13px,0); }
+      to { opacity: 1; transform: translate3d(0,0,0); }
+    }
+    @keyframes cardRise {
+      from { opacity: .6; transform: translate3d(0,11px,0); }
+      to { opacity: 1; transform: translate3d(0,0,0); }
+    }
+    @keyframes authReveal {
+      from { opacity: 0; transform: translate3d(0,20px,0) scale(.98); }
+      to { opacity: 1; transform: translate3d(0,0,0) scale(1); }
+    }
+    @keyframes toastEnter {
+      from { opacity: 0; transform: translate3d(0,15px,0) scale(.96); }
+      to { opacity: 1; transform: translate3d(0,0,0) scale(1); }
+    }
+    @keyframes lineGrow {
+      from { transform: scaleX(.1); opacity: .3; }
+      to { transform: scaleX(1); opacity: 1; }
+    }
+    @keyframes balancePulse {
+      0%, 100% { transform: scale(1); }
+      48% { transform: scale(1.08); color: #ffe2fd; }
+    }
+
+    @media (max-width: 790px) {
+      .profile-layout { grid-template-columns: minmax(0, 1fr); }
+      .shell { padding: 20px 18px 70px; }
+      .topbar { padding: 11px 13px; }
+      .page { padding-top: 34px; }
+    }
+    @media (max-width: 620px) {
+      .shell { padding: 14px 12px 64px; }
+      .topbar {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 17px;
+      }
+      .brand { gap: 9px; }
+      .mark { width: 38px; height: 38px; }
+      .account { gap: 6px; }
+      .header-wallet-actions { gap: 4px; }
+      .header-balance { padding: 8px 9px; }
+      .wallet-shortcut { width: 34px; height: 35px; }
+      .tabs {
+        width: 100%;
+        max-width: 100%;
+        gap: 2px;
+        justify-content: flex-start;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding: 5px;
+        margin-top: 18px;
+      }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tabs button { padding: 9px 12px; font-size: 12px; }
+      .tabs button.active::after { bottom: -6px; }
+      .page { padding-top: 28px; }
+      .card { padding: 20px; border-radius: 20px; }
+      .profile-card, .activity-card { min-height: auto; }
+      h1 { font-size: clamp(28px, 8vw, 36px); }
+      .auth { margin-top: 38px; padding: 24px 20px; }
+      .stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+    }
+    @media (max-width: 420px) {
+      .topbar { flex-direction: column; align-items: stretch; gap: 10px; }
+      .topbar .brand { align-self: flex-start; }
+      .account { justify-content: flex-end; width: 100%; }
+      .account .header-balance { margin-left: auto; }
+      .page .row { gap: 12px; }
+      .wallet-history li { flex-wrap: wrap; }
+      .wallet-history-amount { margin-left: auto; }
+      .card { padding: 18px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation: none !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .button:not(:disabled):hover,
+      .wallet-shortcut:not(:disabled):hover,
+      .avatar-choice:not(:disabled):hover,
+      .brand:hover .mark,
+      .stat:hover {
+        transform: none !important;
+      }
+    }
+
   </style>
 </head>
 <body>
