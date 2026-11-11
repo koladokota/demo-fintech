@@ -1,1623 +1,693 @@
 <!doctype html>
 <html lang="ru">
-
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d12">
   <title>ROCKET X — игровой кабинет</title>
   <style>
     :root {
-      --bg: #090d16;
-      --panel: #111827;
-      --panel2: #151f30;
-      --line: #263348;
-      --text: #eef3fb;
-      --muted: #91a0b6;
-      --accent: #65d6ad;
-      --blue: #7aa7ff;
-      --danger: #ff7d8b
+      color-scheme: dark;
+      --bg: #0b0d12;
+      --surface: #141821;
+      --border: #292f3b;
+      --text: #f4f5f7;
+      --muted: #9aa4b5;
+      --accent: #9fe8cd;
+      --accent-ink: #0b2119;
+      --error: #ffb1b6;
     }
-
-    * {
-      box-sizing: border-box
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: radial-gradient(ellipse at 15% 0%, #17263a 0, transparent 38%), var(--bg);
+      background: var(--bg);
       color: var(--text);
-      font: 15px/1.5 Inter, system-ui, -apple-system, Segoe UI, sans-serif
+      font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
     }
-
-    button,
-    input {
-      font: inherit
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .48; cursor: not-allowed; }
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
     }
-
-    button {
-      cursor: pointer;
-      border: 0;
-      border-radius: 10px;
-      padding: 11px 16px;
-      background: var(--accent);
-      color: #07140f;
-      font-weight: 700
+    .hidden { display: none !important; }
+    .shell { max-width: 1020px; margin: 0 auto; padding: 24px 24px 72px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 60px; }
+    .brand { display: inline-flex; gap: 12px; align-items: center; text-decoration: none; color: var(--text); }
+    .mark {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: grid; place-items: center;
+      font-size: 13px; font-weight: 900; letter-spacing: -.03em;
+      background: var(--accent); color: var(--accent-ink);
     }
-
-    button.secondary {
-      background: #202d42;
-      color: var(--text);
-      border: 1px solid var(--line)
-    }
-
-    button.danger {
-      background: #492630;
-      color: #ffd9de;
-      border: 1px solid #70404b
-    }
-
-    button:disabled {
-      opacity: .45;
-      cursor: not-allowed
-    }
-
-    .wrap {
-      max-width: 1180px;
-      margin: auto;
-      padding: 24px
-    }
-
-    .top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 30px
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      font-weight: 800;
-      font-size: 18px
-    }
-
-    .logo {
-      width: 36px;
-      height: 36px;
-      border-radius: 11px;
-      background: linear-gradient(135deg, var(--accent), var(--blue));
-      display: grid;
-      place-items: center;
-      color: #07140f;
-      font-weight: 900
-    }
-
-    .muted {
-      color: var(--muted)
-    }
-
-    .pill {
-      font-size: 11px;
-      color: #9cebd0;
-      background: #15372f;
-      border: 1px solid #245344;
-      padding: 5px 9px;
-      border-radius: 30px;
-      letter-spacing: .04em
-    }
-
-    .auth {
-      max-width: 440px;
-      margin: 7vh auto;
-      background: #111827;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 20px 70px #0005
-    }
-
-    .auth h1 {
-      font-size: 27px;
-      margin: 8px 0
-    }
-
-    .auth p {
-      color: var(--muted);
-      margin: 0 0 24px
-    }
-
-    .field {
-      display: block;
-      margin: 14px 0
-    }
-
-    .field span {
-      display: block;
-      font-size: 13px;
-      color: #b5c1d2;
-      margin-bottom: 7px
-    }
-
-    .field input {
-      width: 100%;
-      background: #0b1220;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 12px;
-      color: var(--text);
-      outline: none
-    }
-
-    .field input:focus {
-      border-color: var(--accent)
-    }
-
-    .full {
-      width: 100%;
-      margin-top: 8px
-    }
-
-    .switch {
-      text-align: center;
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 13px
-    }
-
-    .link {
-      background: none;
-      color: var(--accent);
-      padding: 0;
-      font-weight: 600
-    }
-
-    .notice {
-      font-size: 12px;
-      color: #aebbd0;
-      background: #172337;
-      border: 1px solid #2b3b54;
-      padding: 11px 13px;
-      border-radius: 10px;
-      margin-top: 17px
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 22px
-    }
-
-    .side,
-    .card {
-      background: #111827;
-      border: 1px solid var(--line);
-      border-radius: 16px
-    }
-
-    .side {
-      padding: 14px;
-      height: max-content;
-      position: sticky;
-      top: 18px
-    }
-
-    .nav {
-      display: flex;
-      flex-direction: column;
-      gap: 6px
-    }
-
-    .nav button {
-      background: transparent;
-      color: var(--muted);
-      text-align: left;
-      font-weight: 600
-    }
-
-    .nav button.active,
-    .nav button:hover {
-      background: #1b293d;
-      color: var(--text)
-    }
-
-    .side-foot {
-      border-top: 1px solid var(--line);
-      margin-top: 18px;
-      padding: 16px 8px 4px;
-      font-size: 12px;
-      color: var(--muted)
-    }
-
-    main h1 {
-      font-size: 26px;
-      margin: 2px 0 4px
-    }
-
-    main .sub {
-      color: var(--muted);
-      margin: 0 0 22px
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      margin-bottom: 16px
-    }
-
-    .card {
-      padding: 19px
-    }
-
-    .metric-label {
-      color: var(--muted);
-      font-size: 13px
-    }
-
-    .metric {
-      font-size: 29px;
-      font-weight: 800;
-      margin: 8px 0 2px;
-      letter-spacing: -.03em
-    }
-
-    .metric small {
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 500
-    }
-
-    .positive {
-      color: var(--accent)
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px
-    }
-
-    .section-title {
-      font-size: 16px;
-      margin: 0 0 14px
-    }
-
-    .wide {
-      margin-bottom: 16px
-    }
-
-    .actions {
-      display: flex;
-      gap: 9px;
-      flex-wrap: wrap
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px
-    }
-
-    .table th,
-    .table td {
-      text-align: left;
-      padding: 12px 9px;
-      border-bottom: 1px solid var(--line)
-    }
-
-    .table th {
-      color: var(--muted);
-      font-weight: 500
-    }
-
-    .table tr:last-child td {
-      border: 0
-    }
-
-    .status {
-      color: var(--accent)
-    }
-
-    .refbox {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px
-    }
-
-    .refbox input {
-      flex: 1;
-      min-width: 0;
-      background: #0b1220;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      padding: 11px;
-      color: var(--text)
-    }
-
-    .empty {
-      color: var(--muted);
-      padding: 18px 0
-    }
-
-    .hidden {
-      display: none !important
-    }
-
-    .profile {
-      display: flex;
-      align-items: center;
-      gap: 12px
-    }
-
+    .brand-name { font-size: 17px; font-weight: 780; letter-spacing: .07em; }
+    .brand-note { font-size: 11px; color: var(--muted); }
+    .account { display: flex; align-items: center; gap: 12px; }
+    .account-name { max-width: 175px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: #263c54;
-      display: grid;
-      place-items: center;
-      font-weight: 800
+      display: inline-grid; place-items: center; flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 12px;
+      background: #25322f; font-size: 19px; font-weight: 750;
     }
-
-    .profile-settings {
-      max-width: 620px;
-      margin-top: 16px;
+    .avatar.big { width: 60px; height: 60px; font-size: 26px; border-radius: 16px; }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 43px; padding: 10px 18px;
+      border: 1px solid var(--accent);
+      border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 720;
+      text-decoration: none;
     }
-
-    .profile-settings .field {
-      margin-top: 0;
+    .button.secondary {
+      background: transparent; border-color: var(--border); color: var(--text);
     }
-
-    .profile-settings .field input {
-      max-width: 100%;
+    .button.text { min-height: 34px; padding: 6px 9px; border: 0; background: transparent; color: var(--muted); }
+    .button:not(:disabled):hover { filter: brightness(1.09); }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 18px; background: var(--surface);
+      padding: 24px;
     }
-
-    .avatar-choices {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 10px 0 18px;
+    .auth {
+      max-width: 440px; margin: min(10vh, 88px) auto 0;
     }
-
+    .auth h1 { font-size: 29px; margin: 4px 0 8px; }
+    .hint, .muted { color: var(--muted); }
+    .hint { font-size: 13px; }
+    .field { display: block; margin: 18px 0; }
+    .field-label { display: block; font-size: 13px; font-weight: 650; margin-bottom: 7px; }
+    .input {
+      width: 100%; min-width: 0; padding: 12px 14px; color: var(--text);
+      background: #10141c; border: 1px solid var(--border);
+      border-radius: 10px; outline: none;
+    }
+    .input[readonly] { color: var(--muted); }
+    .full { width: 100%; }
+    .switch { margin: 18px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
+    .link { padding: 0; border: 0; background: transparent; color: var(--accent); font-weight: 720; }
+    .notice { margin-top: 18px; font-size: 12px; color: var(--muted); }
+    .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border); margin-top: 28px; }
+    .tabs button {
+      border: 0; border-bottom: 2px solid transparent; color: var(--muted);
+      padding: 14px 2px; background: transparent; font-weight: 650;
+    }
+    .tabs button.active { border-bottom-color: var(--accent); color: var(--text); }
+    .page { max-width: 800px; padding-top: 34px; }
+    .eyebrow { color: var(--accent); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .12em; }
+    h1 { margin: 8px 0; font-size: clamp(25px, 4vw, 34px); line-height: 1.25; letter-spacing: -.025em; }
+    h2 { margin: 0 0 15px; font-size: 18px; }
+    p { margin: 7px 0 0; }
+    .section-lead { margin: 0 0 26px; color: var(--muted); }
+    .stack { display: grid; gap: 18px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .controls { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+    .controls .input { max-width: 160px; }
+    .status { margin-top: 17px; color: var(--muted); }
+    .signal { min-height: 25px; margin-top: 12px; font-weight: 660; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .stat { border: 1px solid var(--border); border-radius: 13px; padding: 14px; }
+    .stat strong { display: block; font-size: 24px; font-weight: 800; line-height: 1.4; }
+    .stat span { font-size: 12px; color: var(--muted); }
+    .identity { display: flex; align-items: center; gap: 15px; }
+    .identity strong { font-size: 19px; }
+    .identity .muted { font-size: 13px; word-break: break-word; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+    progress { width: 100%; height: 12px; accent-color: var(--accent); }
+    .avatar-choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 20px; }
     .avatar-choice {
-      width: 50px;
-      height: 50px;
-      font-size: 23px;
-      display: grid;
-      place-items: center;
-      background: #202d42;
-      color: var(--text);
-      border: 2px solid var(--line);
+      display: grid; place-items: center; width: 48px; height: 48px; font-size: 23px;
+      border: 2px solid var(--border); background: #212831; border-radius: 12px;
     }
-
-    .avatar-choice.selected {
-      border-color: var(--accent);
-      background: #183c37;
-    }
-
-    .profile-stats {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .profile-stat {
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel2);
-    }
-
-    .profile-stat strong {
-      font-size: 22px;
-      display: block;
-    }
-
-    .achievement-list {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .achievement {
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel2);
-    }
-
-    .achievement.locked {
-      opacity: .6;
-    }
-
-    .achievement-title {
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    @media(max-width:580px) {
-      .profile-stats,
-      .achievement-list {
-        grid-template-columns: 1fr;
-      }
-    }
-
+    .avatar-choice.selected { border-color: var(--accent); background: #234039; }
+    .achievements { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .achievement { border: 1px solid var(--border); padding: 13px; border-radius: 12px; }
+    .achievement.locked { opacity: .55; }
+    .achievement strong { display: block; font-size: 14px; }
+    .achievement span { font-size: 12px; color: var(--muted); }
+    .ref-count { font-size: 38px; font-weight: 800; line-height: 1.2; margin: 12px 0 4px; }
+    .copy-row { display: flex; align-items: stretch; gap: 10px; margin-top: 15px; }
+    .copy-row input { flex: 1; }
     .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #18392f;
-      border: 1px solid #2c6a54;
-      padding: 12px 17px;
-      border-radius: 11px;
-      display: none;
-      box-shadow: 0 10px 30px #0008
+      position: fixed; right: 20px; bottom: 20px; max-width: min(400px, calc(100vw - 40px));
+      border: 1px solid #3d6c60; border-radius: 12px;
+      padding: 12px 16px; background: #19342d; color: var(--text); font-size: 13px;
+      box-shadow: 0 14px 50px #0006;
     }
-
-    .admin-note {
-      border: 1px solid #725b34;
-      background: #302718;
-      color: #f2d59a;
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 13px;
-      margin-bottom: 16px
-    }
-
-    @media(max-width:800px) {
-      .layout {
-        grid-template-columns: 1fr
-      }
-
-      .side {
-        position: static
-      }
-
-      .nav {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr)
-      }
-
-      .grid {
-        grid-template-columns: 1fr
-      }
-
-      .wrap {
-        padding: 15px
-      }
-
-      .top {
-        margin-bottom: 18px
-      }
-
-      .table {
-        min-width: 560px
-      }
-
-      .table-wrap {
-        overflow: auto
-      }
+    @media(max-width:620px) {
+      .shell { padding: 14px 16px 55px; }
+      .brand-note, .account-name { display: none; }
+      .account { gap: 6px; }
+      .topbar { min-height: 50px; }
+      .tabs { justify-content: space-between; gap: 12px; margin-top: 18px; }
+      .page { padding-top: 26px; }
+      .card { padding: 18px; border-radius: 14px; }
+      .row { align-items: flex-start; }
+      .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .achievements { grid-template-columns: 1fr; }
+      .copy-row { flex-direction: column; }
+      .controls { flex-wrap: wrap; }
     }
   </style>
 </head>
-
 <body>
-  <div class="wrap">
-    <header class="top">
-      <div class="brand">
-        <div class="logo">RX</div><span>ROCKET X</span><span class="pill">DEMO</span>
-      </div>
-      <div id="topUser" class="profile hidden">
-        <div class="avatar" id="topAvatar">U</div><span id="topName"></span><button class="secondary"
-          id="logoutBtn">Выйти</button>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="ROCKET X">
+        <span class="mark">RX</span>
+        <span><span class="brand-name">ROCKET X</span><span class="brand-note" style="display:block">Игровой прототип</span></span>
+      </a>
+      <div id="topUser" class="account hidden">
+        <span id="topAvatar" class="avatar">R</span>
+        <span id="topName" class="account-name"></span>
+        <button class="button text" id="logoutBtn" type="button">Выйти</button>
       </div>
     </header>
 
-    <section id="authView" class="auth">
-      <div class="pill">ДЕМО-СРЕДА · ВИРТУАЛЬНЫЕ СРЕДСТВА</div>
-      <h1 id="authTitle">Вход в аккаунт</h1>
-      <p id="authSubtitle">Введите данные, чтобы открыть демонстрационный кабинет.</p>
+    <section id="authView" class="auth card">
+      <div class="eyebrow">Добро пожаловать</div>
+      <h1 id="authTitle">Вход</h1>
+      <p id="authSubtitle" class="section-lead">Войди, чтобы открыть свой кабинет.</p>
+      <p id="inviteNotice" class="hint hidden">Ты перешёл по пригласительной ссылке. Создай аккаунт, чтобы присоединиться.</p>
       <form id="authForm">
-        <label class="field hidden" id="nameField"><span>Имя</span><input id="nameInput" autocomplete="name"
-            placeholder="Как к вам обращаться"></label>
-        <label class="field"><span>Email</span><input id="emailInput" type="email" autocomplete="email" required
-            placeholder="name@example.com"></label>
-        <label class="field"><span>Пароль</span><input id="passwordInput" type="password" minlength="1"
-            autocomplete="current-password" required placeholder="Введите пароль"></label>
-        <button class="full" id="authSubmit">Войти</button>
+        <label class="field hidden" id="nameField">
+          <span class="field-label">Имя</span>
+          <input class="input" id="nameInput" type="text" autocomplete="name" maxlength="32" placeholder="Имя игрока">
+        </label>
+        <label class="field">
+          <span class="field-label">Электронная почта</span>
+          <input class="input" id="emailInput" type="email" autocomplete="email" required placeholder="name@example.com">
+        </label>
+        <label class="field">
+          <span class="field-label">Пароль</span>
+          <input class="input" id="passwordInput" type="password" autocomplete="current-password" required placeholder="Введите пароль">
+        </label>
+        <button class="button full" id="authSubmit" type="submit">Войти</button>
       </form>
-      <div class="switch"><span id="switchText">Нет аккаунта?</span> <button class="link"
-          id="switchMode">Зарегистрироваться</button></div>
-      <div class="notice">Это тестовая версия. Аккаунты, баланс и покупки хранятся в PostgreSQL. Все монеты виртуальные, реальные платежи отсутствуют. Для тестирования используйте отдельный пароль.</div>
+      <div class="switch">
+        <span id="switchText">Нет аккаунта?</span>
+        <button class="link" id="switchMode" type="button">Зарегистрироваться</button>
+      </div>
+      <p class="notice">Тестовая среда. Не используйте настоящий пароль. Все игровые балансы виртуальные, реальные платежи отсутствуют.</p>
     </section>
 
-    <section id="appView" class="layout hidden">
-      <aside class="side">
-        <div class="nav">
-          <button class="active" data-page="overview">▦ Обзор</button>
-          <button data-page="missions">◈ Миссии</button>
-          <button data-page="shop">🛒 Магазин</button>
-          <button data-page="inventory">🎒 Инвентарь</button>
-          <button data-page="games">🎮 Игры</button>
-          <button data-page="transactions">↕ Операции</button>
-          <button data-page="profile">◎ Профиль</button>
-        </div>
-        <div class="side-foot">Все суммы условные.<br>Демо-режим без реальных денег.</div>
-      </aside>
+    <section id="appView" class="hidden">
+      <nav class="tabs" aria-label="Разделы">
+        <button class="active" data-page="games" type="button">Игра</button>
+        <button data-page="profile" type="button">Профиль</button>
+        <button data-page="referrals" type="button">Рефералы</button>
+      </nav>
       <main>
-        <div id="page-overview">
-          <h1>Обзор</h1>
-          <p class="sub">Сводка вашего демонстрационного аккаунта</p>
-          <div class="grid">
-            <div class="card">
-              <div class="metric-label">Виртуальный баланс</div>
-              <div class="metric" id="balanceMetric">0 монет</div>
-              <div class="muted">Только внутриигровые монеты</div>
-            </div>
-            <div class="card">
-              <div class="metric-label">Уровень игрока</div>
-              <div class="metric" id="levelMetric">—</div>
-              <div class="muted" id="levelMetricHint">Опыт загружается</div>
-            </div>
-            <div class="card">
-              <div class="metric-label">Приобретено предметов</div>
-              <div class="metric positive" id="inventoryMetric">—</div>
-              <div class="muted">Покупки сохраняются в инвентаре</div>
-            </div>
-          </div>
-          <div class="card wide">
+        <section class="page" id="page-games">
+          <div class="eyebrow">Игра</div>
+          <h1>Угадай число</h1>
+          <p class="section-lead">Небольшой прототип игровой механики. Позже заменим его основной игрой.</p>
+          <div class="card stack">
             <div class="row">
               <div>
-                <h2 class="section-title">Миссии и награды</h2>
-                <div class="muted" id="missionsPreview">Загрузка заданий...</div>
+                <h2>Число от 1 до 20</h2>
+                <p class="muted">Пять попыток. Первая победа за сутки даёт 10 XP.</p>
               </div>
-              <button class="secondary" id="openMissions">Смотреть миссии</button>
+              <button class="button" id="startNumberGame" type="button">Играть</button>
             </div>
-          </div>
-          <div class="card wide">
-            <div class="row">
-              <div>
-                <h2 class="section-title">Быстрые действия</h2>
-                <div class="muted">Попробуйте функции без реальных платежей</div>
+            <p id="numberGameStatus" class="status" role="status">Загрузка состояния игры...</p>
+            <form id="numberGameForm" class="hidden">
+              <label class="field-label" for="numberGameGuess">Твоё число</label>
+              <div class="controls">
+                <input class="input" id="numberGameGuess" type="number" min="1" max="20" step="1" value="10" required>
+                <button class="button secondary" id="sendNumberGuess" type="submit">Проверить</button>
               </div>
-            </div>
-            <div id="demoActions" class="actions hidden" style="margin-top:16px">
-              <button id="demoAdd">Добавить 1 000 тестовых монет</button>
-              <button class="secondary" id="demoSpend">Списать 250 тестовых монет</button>
-            </div>
-            <p class="muted" id="demoActionsNotice" style="margin-top:14px">Тестовые операции недоступны в обычном режиме.</p>
+            </form>
+            <p class="signal" id="numberGameHint" aria-live="polite"></p>
           </div>
-          <div class="card wide">
-            <h2 class="section-title">Последние операции</h2>
-            <div id="recentTable"></div>
-          </div>
-        </div>
-        <div id="page-missions" class="hidden">
-          <h1>Миссии</h1>
-          <p class="sub">Зарабатывай виртуальные монеты за действия на сайте. Награды подтверждает сервер.</p>
-          <div class="card wide">
-            <div class="row">
-              <h2 class="section-title" style="margin:0">Твои задания</h2>
-              <span class="muted" id="missionSummary">Загрузка...</span>
-            </div>
-            <div id="missionList" style="margin-top:14px;display:grid;gap:12px"></div>
-            <p class="muted" style="margin-top:16px;font-size:12px">
-              Ежедневная миссия обновляется в 00:00 UTC. Остальные награды доступны один раз за аккаунт.
-            </p>
-          </div>
-        </div>
-        <div id="page-shop" class="hidden">
-          <h1>Магазин</h1>
-          <p class="sub">
-            Покупайте игровые предметы за виртуальные монеты
-          </p>
+        </section>
 
-          <div id="shopGrid" class="grid"></div>
-        </div>
-        <div id="page-inventory" class="hidden">
-          <h1>Инвентарь</h1>
-          <p class="sub">Предметы, которые вы приобрели</p>
-          <div id="inventoryGrid" class="grid"></div>
-        </div>
-        <div id="page-games" class="hidden">
-          <h1>Игры</h1>
-          <p class="sub">Небольшие игры с виртуальным опытом за достижения</p>
-          <div class="card" style="max-width:680px">
-            <div class="row">
-              <div>
-                <h2 class="section-title">Угадай код</h2>
-                <p class="muted">Число от 1 до 20. У тебя 5 попыток. За первую победу в сутки: +10 XP.</p>
-              </div>
-              <button id="startNumberGame">Играть</button>
-            </div>
-            <p id="numberGameStatus" class="muted" style="margin-top:18px" role="status">Загрузка...</p>
-            <div id="numberGameControls" class="hidden" style="margin-top:18px">
-              <label for="numberGameGuess" class="muted">Твоя догадка (1–20)</label>
-              <div class="actions" style="margin-top:10px">
-                <input id="numberGameGuess" type="number" min="1" max="20" step="1" value="10"
-                  style="max-width:140px" aria-label="Число от 1 до 20">
-                <button id="sendNumberGuess">Проверить</button>
-              </div>
-            </div>
-            <p id="numberGameHint" style="margin-top:16px" aria-live="polite"></p>
-          </div>
-        </div>
-        <div id="page-transactions" class="hidden">
-          <h1>Операции</h1>
-          <p class="sub">История виртуальных зачислений и списаний</p>
-          <div class="card table-wrap">
-            <div id="allTable"></div>
-          </div>
-        </div>
-        <div id="page-profile" class="hidden">
+        <section class="page hidden" id="page-profile">
+          <div class="eyebrow">Аккаунт</div>
           <h1>Профиль</h1>
-          <p class="sub">Данные демонстрационного аккаунта</p>
-          <div class="card" style="max-width:620px">
-            <div class="profile">
-              <div class="avatar" id="profileAvatar">U</div>
-              <div><b id="profileName"></b>
-                <div class="muted" id="profileEmail"></div>
+          <p class="section-lead">Имя, прогресс и достижения игрока.</p>
+          <div class="stack">
+            <div class="card">
+              <div class="identity">
+                <span id="profileAvatar" class="avatar big">R</span>
+                <div>
+                  <strong id="profileName">Игрок</strong>
+                  <div class="muted" id="profileEmail"></div>
+                  <div class="muted" id="createdAt"></div>
+                </div>
+              </div>
+              <hr class="divider">
+              <div class="row">
+                <strong id="playerLevel">Уровень 1</strong>
+                <span id="playerXP" class="hint">0 / 100 XP</span>
+              </div>
+              <progress id="playerXPBar" value="0" max="100" style="margin:14px 0"></progress>
+              <div class="row">
+                <span class="hint">Ежедневная активность: +25 XP</span>
+                <button class="button secondary" id="claimDailyXP" type="button">Получить XP</button>
               </div>
             </div>
-            <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
-            <div class="row"><span class="muted">Дата создания</span><span id="createdAt"></span></div>
-            <div class="row" style="margin-top:12px"><span class="muted">ID аккаунта</span><span id="profileId"></span>
+            <form class="card" id="profileSettingsForm">
+              <h2>Настройки</h2>
+              <label class="field">
+                <span class="field-label">Отображаемое имя</span>
+                <input class="input" id="profileNameInput" type="text" minlength="2" maxlength="32" required>
+              </label>
+              <div class="field-label">Аватар</div>
+              <div id="avatarChoices" class="avatar-choices" role="group" aria-label="Выбор аватара"></div>
+              <button class="button" id="profileSaveButton" type="submit">Сохранить</button>
+              <p class="hint" id="profileSaveStatus" role="status"></p>
+            </form>
+            <div class="card">
+              <h2>Статистика</h2>
+              <div id="profileStats" class="stat-grid"><span class="muted">Загрузка...</span></div>
+            </div>
+            <div class="card">
+              <h2>Достижения</h2>
+              <div id="profileAchievements" class="achievements"><span class="muted">Загрузка...</span></div>
             </div>
           </div>
-          <div class="card" style="max-width:620px;margin-top:16px">
-            <h2 class="section-title">Уровень игрока</h2>
-            <div class="row">
-              <strong id="playerLevel">Уровень 1</strong>
-              <span class="muted" id="playerXP">0 / 100 XP</span>
+        </section>
+
+        <section class="page hidden" id="page-referrals">
+          <div class="eyebrow">Сообщество</div>
+          <h1>Рефералы</h1>
+          <p class="section-lead">Пригласи знакомых через персональную ссылку.</p>
+          <div class="card">
+            <span class="hint">Зарегистрировались по твоей ссылке</span>
+            <div class="ref-count" id="referralCount">—</div>
+            <hr class="divider">
+            <div class="field-label">Ссылка-приглашение</div>
+            <div class="copy-row">
+              <input class="input" id="referralLink" readonly aria-label="Ссылка-приглашение">
+              <button class="button" id="copyReferral" type="button">Копировать</button>
             </div>
-            <progress id="playerXPBar" value="0" max="100" style="width:100%;height:18px;margin:14px 0"></progress>
-            <p class="muted">Ежедневная активность: +25 XP один раз за календарные сутки по UTC.</p>
-            <button id="claimDailyXP" class="secondary" style="margin-top:12px">Получить +25 XP</button>
+            <p class="notice" style="margin-bottom:0">Считаются только новые регистрации по ссылке. Реферальных денежных выплат или бонусов сейчас нет.</p>
           </div>
-          <form class="card profile-settings" id="profileSettingsForm">
-            <h2 class="section-title">Настройки профиля</h2>
-            <label class="field" for="profileNameInput">
-              <span>Отображаемое имя</span>
-              <input id="profileNameInput" type="text" minlength="2" maxlength="32" required
-                placeholder="От 2 до 32 символов">
-            </label>
-            <div class="muted">Выбери аватар</div>
-            <div class="avatar-choices" id="avatarChoices" role="group" aria-label="Выбор аватара"></div>
-            <button id="profileSaveButton" type="submit">Сохранить изменения</button>
-            <p id="profileSaveStatus" class="muted" role="status" style="margin-top:10px"></p>
-          </form>
-          <div class="card" style="margin-top:16px">
-            <h2 class="section-title">Статистика</h2>
-            <div id="profileStats" class="profile-stats">
-              <span class="muted">Загрузка статистики...</span>
-            </div>
-          </div>
-          <div class="card" style="margin-top:16px">
-            <h2 class="section-title">Достижения</h2>
-            <div id="profileAchievements" class="achievement-list">
-              <span class="muted">Загрузка достижений...</span>
-            </div>
-          </div>
-        </div>
+        </section>
       </main>
     </section>
   </div>
-  <div id="toast" class="toast"></div>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
   <script>
-    const API = "";
-
-    let currentUser = null;
-    let demo = { balance: 0, transactions: [] };
-    let inventory = [];
-    let playerProgress = null;
-    let missions = [];
-    let selectedAvatarKey = "initial";
-
     const TOKEN_KEY = "demo_fintech_token";
-    const PAGE_KEY_PREFIX = "demo_fintech_page_";
-    let numberGame = null;
-    let numberGameFeedback = "";
-
-    async function request(url, options = {}) {
-      const response = await fetch(API + url, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          ...(options.headers || {})
-        }
-      });
-
-      const text = await response.text();
-      let result = {};
-
-      try {
-        result = JSON.parse(text);
-      } catch {
-        result = { message: text };
-      }
-
-      if (!response.ok) {
-        const error = new Error(result.message || text || "Ошибка запроса");
-        error.status = response.status;
-        throw error;
-      }
-
-      return result;
-    }
-
-    function toast(message) {
-      const element = document.getElementById("toast");
-      element.textContent = message;
-      element.style.display = "block";
-
-      setTimeout(() => {
-        element.style.display = "none";
-      }, 2500);
-    }
-
-    function money(value) {
-      return Number(value || 0).toLocaleString("ru-RU") + " монет";
-    }
-
-    function avatarSymbol(key, name) {
-      const symbols = {
-        rocket: "🚀",
-        planet: "🪐",
-        bolt: "⚡",
-        star: "⭐",
-        shield: "🛡️"
-      };
-      return symbols[key] || (String(name || "U").charAt(0).toUpperCase());
-    }
-
-    function showApp() {
-      document.getElementById("authView").classList.add("hidden");
-      document.getElementById("appView").classList.remove("hidden");
-      document.getElementById("topUser").classList.remove("hidden");
-
-      demo = { balance: 0, transactions: [] };
-      inventory = [];
-      playerProgress = null;
-      missions = [];
-      render();
-      renderMissions();
-      loadFeatures().catch(() => {});
-
-      const pageKey = PAGE_KEY_PREFIX + currentUser.id;
-      const savedPage = sessionStorage.getItem(pageKey) || "overview";
-      const targetButton = Array.from(document.querySelectorAll(".nav button"))
-        .find(button => button.dataset.page === savedPage);
-      (targetButton || document.querySelector('[data-page="overview"]')).click();
-    }
-
-    function render() {
-      const u = currentUser;
-
-      document.getElementById("topName").textContent = u.name;
-      document.getElementById("topAvatar").textContent =
-        avatarSymbol(u.avatar_key, u.name);
-
-      document.getElementById("balanceMetric").textContent =
-        money(demo.balance);
-
-      document.getElementById("levelMetric").textContent =
-        playerProgress ? String(playerProgress.level) : "—";
-      document.getElementById("levelMetricHint").textContent =
-        playerProgress ? playerProgress.total_xp + " XP всего" : "Опыт загружается";
-      document.getElementById("inventoryMetric").textContent =
-        Array.isArray(inventory) ? String(inventory.length) : "—";
-
-      document.getElementById("recentTable").innerHTML =
-        createTable(demo.transactions.slice(0, 5));
-
-      document.getElementById("allTable").innerHTML =
-        createTable(demo.transactions);
-
-      document.getElementById("profileName").textContent = u.name;
-      document.getElementById("profileEmail").textContent = u.email;
-
-      document.getElementById("profileAvatar").textContent =
-        avatarSymbol(u.avatar_key, u.name);
-
-      document.getElementById("createdAt").textContent =
-        new Date(u.created_at).toLocaleDateString("ru-RU");
-
-      document.getElementById("profileId").textContent = u.id;
-
-    }
-
-    function escapeHTML(value) {
-      return String(value ?? "").replace(/[&<>"\x27]/g, char => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "\x27": "&#39;"
-      }[char]));
-    }
-
-    function createTable(rows) {
-      if (!rows.length) {
-        return '<div class="empty">Операций пока нет</div>';
-      }
-
-      return `
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Дата</th>
-        <th>Тип</th>
-        <th>Описание</th>
-        <th>Сумма</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows.map(t => `
-      <tr>
-        <td>${escapeHTML(new Date(t.date).toLocaleString("ru-RU"))}</td>
-        <td>${escapeHTML(t.type)}</td>
-        <td>${escapeHTML(t.description)}</td>
-        <td>${t.amount >= 0 ? "+" : ""}${money(t.amount)}</td>
-      </tr>
-      `).join("")}
-    </tbody>
-  </table>
-  `;
-    }
-
-    // Регистрация и вход
-
-    let mode = "login";
-
-    function setMode(value) {
-      mode = value;
-
-      document.getElementById("authTitle").textContent =
-        mode === "login" ? "Вход в аккаунт" : "Создание аккаунта";
-
-      document.getElementById("authSubtitle").textContent =
-        mode === "login"
-          ? "Введите данные для входа."
-          : "Создайте демонстрационный аккаунт.";
-
-      document.getElementById("nameField").classList.toggle(
-        "hidden", mode === "login"
-      );
-
-      document.getElementById("nameInput").required =
-        mode === "register";
-      const password = document.getElementById("passwordInput");
-      password.minLength = mode === "register" ? 8 : 1;
-      password.placeholder = mode === "register" ? "Не менее 8 символов" : "Введите пароль";
-
-      document.getElementById("authSubmit").textContent =
-        mode === "login" ? "Войти" : "Зарегистрироваться";
-
-      document.getElementById("switchText").textContent =
-        mode === "login" ? "Нет аккаунта?" : "Уже зарегистрированы?";
-
-      document.getElementById("switchMode").textContent =
-        mode === "login" ? "Зарегистрироваться" : "Войти";
-    }
-
-    document.getElementById("switchMode").onclick = () => {
-      setMode(mode === "login" ? "register" : "login");
-    };
-
-    document.getElementById("authForm").onsubmit = async (event) => {
-      event.preventDefault();
-
-      const body = {
-        name: document.getElementById("nameInput").value.trim(),
-        email: document.getElementById("emailInput").value.trim(),
-        password: document.getElementById("passwordInput").value
-      };
-
-      const submit = document.getElementById("authSubmit");
-      submit.disabled = true;
-      try {
-        const endpoint = mode === "login"
-          ? "/api/login"
-          : "/api/register";
-
-        const result = await request(endpoint, {
-          method: "POST",
-          body: JSON.stringify(body)
-        });
-
-        localStorage.setItem(TOKEN_KEY, result.token);
-        currentUser = result.user;
-
-        showApp();
-        toast(mode === "login" ? "Вы вошли в аккаунт" : "Аккаунт создан");
-        await refreshAccountData();
-      } catch (error) {
-        toast(error.message);
-      } finally {
-        submit.disabled = false;
-      }
-    };
-
-    // Проверка авторизации
-
-    async function loadFeatures() {
-      const flags = await request("/api/features");
-      const enabled = flags.demo_credits_enabled === true;
-      document.getElementById("demoActions").classList.toggle("hidden", !enabled);
-      document.getElementById("demoActionsNotice").textContent = enabled
-        ? "Режим разработки: операции меняют виртуальный баланс в PostgreSQL."
-        : "Тестовые операции недоступны в обычном режиме.";
-    }
-
-    async function refreshAccountData() {
-      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress(), loadProfile(), loadMissions()]);
-      if (results.some(result => result.status === "rejected")) {
-        toast("Часть данных не загрузилась. Попробуйте обновить страницу.");
-      }
-    }
-
-
-    function renderMissions() {
-      const ready = missions.filter(m => m.completed && !m.claimed).length;
-      const claimed = missions.filter(m => m.claimed).length;
-      document.getElementById("missionsPreview").textContent =
-        missions.length
-          ? claimed + " из " + missions.length + " наград получено" +
-            (ready ? " · Доступно к получению: " + ready : "")
-          : "Загрузка заданий...";
-      document.getElementById("missionSummary").textContent =
-        claimed + " из " + missions.length + " наград получено";
-
-      const container = document.getElementById("missionList");
-      container.replaceChildren();
-      if (!missions.length) {
-        const empty = document.createElement("div");
-        empty.className = "muted";
-        empty.textContent = "Загрузка заданий...";
-        container.appendChild(empty);
-        return;
-      }
-      for (const mission of missions) {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.style.background = "var(--panel2)";
-
-        const head = document.createElement("div");
-        head.className = "row";
-        const info = document.createElement("div");
-        const title = document.createElement("strong");
-        title.textContent = mission.title;
-        const desc = document.createElement("p");
-        desc.className = "muted";
-        desc.style.margin = "5px 0";
-        desc.textContent = mission.description;
-        info.append(title, desc);
-        const reward = document.createElement("strong");
-        reward.className = "positive";
-        reward.style.whiteSpace = "nowrap";
-        reward.textContent = "+" + mission.reward_coins + " монет";
-        head.append(info, reward);
-        card.appendChild(head);
-
-        const footer = document.createElement("div");
-        footer.className = "row";
-        footer.style.marginTop = "12px";
-        const status = document.createElement("span");
-        status.className = "muted";
-        status.textContent = mission.claimed ? "Награда получена"
-          : mission.completed ? "Задание выполнено" : "Не выполнено";
-        const button = document.createElement("button");
-        button.className = "secondary";
-        if (mission.claimed) {
-          button.textContent = "Получено";
-          button.disabled = true;
-        } else if (mission.completed) {
-          button.textContent = "Забрать награду";
-          button.onclick = () => claimMission(mission.id, button);
-        } else {
-          button.textContent = mission.id === "first_purchase" ? "В магазин" : "В профиль";
-          button.onclick = () => document.querySelector(
-            '[data-page="' + (mission.id === "first_purchase" ? "shop" : "profile") + '"]'
-          ).click();
-        }
-        footer.append(status, button);
-        card.appendChild(footer);
-        container.appendChild(card);
-      }
-    }
-
-    async function loadMissions() {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token || !currentUser) return;
-      const data = await request("/api/missions", {
-        headers: { Authorization: "Bearer " + token }
-      });
-      if (!Array.isArray(data)) throw new Error("Некорректный ответ сервера");
-      missions = data;
-      renderMissions();
-    }
-
-    async function claimMission(id, button) {
-      button.disabled = true;
-      try {
-        const token = localStorage.getItem(TOKEN_KEY);
-        const result = await request("/api/missions/claim", {
-          method: "POST",
-          headers: { Authorization: "Bearer " + token },
-          body: JSON.stringify({ mission_id: id })
-        });
-        const completed = missions.find(m => m.id === id);
-        if (completed) completed.claimed = true;
-        renderMissions();
-        toast("Получено +" + result.coins_awarded + " виртуальных монет");
-        const updates = await Promise.allSettled([loadWallet(), loadMissions()]);
-        if (updates.some(u => u.status === "rejected")) {
-          toast("Награда начислена, но данные не обновились. Перезагрузи страницу.");
-        }
-      } catch (error) {
-        toast("Не удалось получить награду: " + error.message);
-        await loadMissions().catch(() => {});
-      } finally {
-        button.disabled = false;
-      }
-    }
-
-    document.getElementById("openMissions").onclick = () => {
-      document.querySelector('[data-page="missions"]').click();
-    };
-    document.querySelector('[data-page="missions"]').addEventListener("click", () => {
-      loadMissions().catch(error => toast("Ошибка загрузки миссий: " + error.message));
-    });
-
-    async function loadWallet() {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) return;
-
-      const wallet = await request("/api/wallet", {
-        headers: { Authorization: "Bearer " + token }
-      });
-
-      demo.balance = wallet.balance;
-      demo.transactions = wallet.transactions.map(t => ({
-        type: t.type,
-        amount: t.amount,
-        description: t.description,
-        date: t.created_at
-      }));
-      render();
-    }
-
-    async function checkAuth() {
-      const token = localStorage.getItem(TOKEN_KEY);
-
-      if (!token) return;
-
-      try {
-        currentUser = await request("/api/me", {
-          headers: {
-            Authorization: "Bearer " + token
-          }
-        });
-
-      } catch (error) {
-        if (error.status === 401) {
-          localStorage.removeItem(TOKEN_KEY);
-        } else {
-          toast("Не удалось проверить сессию: " + error.message);
-        }
-        return;
-      }
-
-      showApp();
-      await refreshAccountData();
-    }
-
-    // Выход
-
-    document.getElementById("logoutBtn").onclick = async () => {
-      const button = document.getElementById("logoutBtn");
-      button.disabled = true;
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (token) {
-        try {
-          await request("/api/logout", {
-            method: "POST",
-            headers: { Authorization: "Bearer " + token }
-          });
-        } catch (error) {
-          if (error.status !== 401) {
-            toast("Не удалось отозвать сессию на сервере. Проверьте соединение.");
-          }
-        }
-      }
-      if (currentUser) {
-        sessionStorage.removeItem(PAGE_KEY_PREFIX + currentUser.id);
-      }
-      localStorage.removeItem(TOKEN_KEY);
-      currentUser = null;
-      demo = { balance: 0, transactions: [] };
-      inventory = [];
-      playerProgress = null;
-      numberGame = null;
-      missions = [];
-      document.getElementById("appView").classList.add("hidden");
-      document.getElementById("topUser").classList.add("hidden");
-      document.getElementById("authView").classList.remove("hidden");
-      document.getElementById("passwordInput").value = "";
-      button.disabled = false;
-    };
-
-    // Навигация
-
-    document.querySelectorAll(".nav button").forEach(button => {
-      button.onclick = () => {
-        document.querySelectorAll(".nav button").forEach(b =>
-          b.classList.remove("active")
-        );
-
-        button.classList.add("active");
-
-        document.querySelectorAll("main > div").forEach(page =>
-          page.classList.add("hidden")
-        );
-
-        document.getElementById(
-          "page-" + button.dataset.page
-        ).classList.remove("hidden");
-
-        if (currentUser) {
-          sessionStorage.setItem(PAGE_KEY_PREFIX + currentUser.id, button.dataset.page);
-        }
-      };
-    });
-
-    // Демонстрационные виртуальные операции
-
-    document.getElementById("demoAdd").onclick = async () => {
-      const button = document.getElementById("demoAdd");
-      button.disabled = true;
-
-      try {
-        const token = localStorage.getItem(TOKEN_KEY);
-
-        const result = await request("/api/wallet/demo-add", {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + token
-          }
-        });
-
-        await loadWallet();
-
-        toast("Начислено 1 000 виртуальных монет");
-
-        console.log("Баланс PostgreSQL:", result.balance);
-
-      } catch (error) {
-        toast("Ошибка: " + error.message);
-      } finally {
-        button.disabled = false;
-      }
-    };
-
-
-    document.getElementById("demoSpend").onclick = async () => {
-      const button = document.getElementById("demoSpend");
-      button.disabled = true;
-
-      try {
-        const token = localStorage.getItem(TOKEN_KEY);
-
-        await request("/api/wallet/demo-spend", {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + token
-          }
-        });
-
-        await loadWallet();
-        toast("Списано 250 виртуальных монет");
-
-      } catch (error) {
-        toast("Ошибка: " + error.message);
-      } finally {
-        button.disabled = false;
-      }
-    };
-    async function loadShop() {
-      const grid = document.getElementById("shopGrid");
-      grid.textContent = "Загрузка магазина...";
-
-      try {
-        const [items, owned] = await Promise.all([
-          request("/api/shop/items"),
-          request("/api/shop/inventory", { headers: { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) } })
-        ]);
-        inventory = owned;
-        render();
-        grid.replaceChildren();
-
-        for (const item of items) {
-          const card = document.createElement("div");
-          card.className = "card";
-
-          card.innerHTML = `
-        <h2 class="section-title"></h2>
-        <p class="muted"></p>
-        <p class="muted"></p>
-        <h3></h3>
-        <button>Купить</button>
-      `;
-
-          card.children[0].textContent = item.name;
-          card.children[1].textContent = item.description;
-          card.children[2].textContent = "Редкость: " + item.rarity;
-          card.children[3].textContent =
-            item.price.toLocaleString("ru-RU") + " монет";
-
-          const button = card.querySelector("button");
-          const ownedItem = inventory.some(owned => owned.id === item.id);
-          if (ownedItem) {
-            button.textContent = "Уже куплено";
-            button.disabled = true;
-            card.classList.add("owned");
-          }
-
-          button.onclick = async () => {
-            button.disabled = true;
-
-            try {
-              const token = localStorage.getItem(TOKEN_KEY);
-
-              if (!token) {
-                throw new Error("Необходимо войти в аккаунт");
-              }
-
-              await request("/api/shop/buy", {
-                method: "POST",
-                headers: { Authorization: "Bearer " + token },
-                body: JSON.stringify({ item_id: item.id })
-              });
-              button.textContent = "Уже куплено";
-              button.disabled = true;
-              card.classList.add("owned");
-              toast("Предмет приобретён: " + item.name);
-
-              const updates = await Promise.allSettled([loadWallet(), loadInventory(), loadMissions()]);
-              if (updates.some(update => update.status === "rejected")) {
-                toast("Покупка прошла, но данные не обновились. Перезагрузите страницу.");
-              }
-            } catch (error) {
-              toast("Ошибка покупки: " + error.message);
-              button.disabled = false;
-            }
-          };
-
-          grid.appendChild(card);
-        }
-
-      } catch (error) {
-        grid.textContent = "Ошибка загрузки: " + error.message;
-      }
-    }
-
-    document
-      .querySelector('[data-page="shop"]')
-      .addEventListener("click", loadShop);
-
-    async function loadInventory() {
-      const grid = document.getElementById("inventoryGrid");
-      grid.textContent = "Загрузка инвентаря...";
-      try {
-        inventory = await request("/api/shop/inventory", {
-          headers: { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) }
-        });
-        render();
-        grid.replaceChildren();
-        if (!inventory.length) {
-          grid.innerHTML = '<div class="empty">Пока нет приобретённых предметов</div>';
-          return;
-        }
-        for (const item of inventory) {
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = '<h2 class="section-title"></h2><p class="muted"></p><p class="muted"></p>';
-          card.children[0].textContent = item.name;
-          card.children[1].textContent = "Редкость: " + item.rarity;
-          card.children[2].textContent = "Куплено: " + new Date(item.purchased_at).toLocaleString("ru-RU");
-          grid.appendChild(card);
-        }
-      } catch (error) {
-        grid.textContent = "Ошибка загрузки: " + error.message;
-      }
-    }
-
-    document
-      .querySelector('[data-page="inventory"]')
-      .addEventListener("click", loadInventory);
-
-
-    async function loadProgress() {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token) return;
-
-      const progress = await request("/api/progression", {
-        headers: { Authorization: "Bearer " + token }
-      });
-      playerProgress = progress;
-      render();
-
-      document.getElementById("playerLevel").textContent = "Уровень " + progress.level;
-      document.getElementById("playerXP").textContent =
-        progress.xp_in_level + " / " + progress.xp_for_next_level +
-        " XP (всего " + progress.total_xp + ")";
-      const bar = document.getElementById("playerXPBar");
-      bar.max = progress.xp_for_next_level;
-      bar.value = progress.xp_in_level;
-
-      const button = document.getElementById("claimDailyXP");
-      button.disabled = progress.claimed_today;
-      button.textContent = progress.claimed_today ? "Сегодня уже получено" : "Получить +25 XP";
-    }
-
-    document.getElementById("claimDailyXP").onclick = async () => {
-      const button = document.getElementById("claimDailyXP");
-      button.disabled = true;
-      try {
-        const token = localStorage.getItem(TOKEN_KEY);
-        await request("/api/progression/check-in", {
-          method: "POST",
-          headers: { Authorization: "Bearer " + token }
-        });
-        await loadProgress();
-        await Promise.allSettled([loadProfile(), loadMissions()]);
-        toast("Получено 25 XP!");
-      } catch (error) {
-        toast("Не удалось получить XP: " + error.message);
-        await loadProgress().catch(() => { button.disabled = false; });
-      }
-    };
-
+    const PAGE_PREFIX = "demo_fintech_page_";
     const avatarOptions = [
-      { key: "initial", title: "Первая буква имени" },
+      { key: "initial", title: "Буква имени" },
       { key: "rocket", title: "Ракета" },
       { key: "planet", title: "Планета" },
       { key: "bolt", title: "Молния" },
       { key: "star", title: "Звезда" },
       { key: "shield", title: "Щит" }
     ];
+    const invitationCode = (new URLSearchParams(window.location.search).get("ref") || "").trim().toUpperCase();
+    let currentUser = null;
+    let game = null;
+    let selectedAvatar = "initial";
+    let authMode = "login";
+    let toastHandle;
 
-    function renderAvatarChoices() {
-      const container = document.getElementById("avatarChoices");
-      container.replaceChildren();
-      for (const option of avatarOptions) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "avatar-choice" +
-          (selectedAvatarKey === option.key ? " selected" : "");
-        button.title = option.title;
-        button.setAttribute("aria-label", option.title);
-        button.setAttribute("aria-pressed", String(selectedAvatarKey === option.key));
-        button.textContent = avatarSymbol(option.key, document.getElementById("profileNameInput").value);
-        button.onclick = () => {
-          selectedAvatarKey = option.key;
-          renderAvatarChoices();
-        };
-        container.appendChild(button);
-      }
-    }
+    function el(id) { return document.getElementById(id); }
 
-    function profileStatNode(title, value) {
-      const node = document.createElement("div");
-      node.className = "profile-stat";
-      const valueNode = document.createElement("strong");
-      valueNode.textContent = Number(value ?? 0).toLocaleString("ru-RU");
-      const titleNode = document.createElement("span");
-      titleNode.className = "muted";
-      titleNode.textContent = title;
-      node.append(valueNode, titleNode);
-      return node;
-    }
-
-    function applyProfile(profile) {
-      currentUser = profile.user;
-      render();
-
-      const input = document.getElementById("profileNameInput");
-      input.value = profile.user.name;
-      selectedAvatarKey = profile.user.avatar_key || "initial";
-      renderAvatarChoices();
-
-      const stats = profile.stats;
-      const statsContainer = document.getElementById("profileStats");
-      statsContainer.replaceChildren(
-        profileStatNode("Уровень", stats.level),
-        profileStatNode("Общий XP", stats.total_xp),
-        profileStatNode("Предметы", stats.items_owned),
-        profileStatNode("Завершено игр", stats.games_finished),
-        profileStatNode("Побед", stats.games_won),
-        profileStatNode("Ежедневных наград", stats.daily_checkins)
-      );
-
-      const achievements = document.getElementById("profileAchievements");
-      achievements.replaceChildren();
-      for (const item of profile.achievements) {
-        const card = document.createElement("div");
-        card.className = "achievement" + (item.unlocked ? "" : " locked");
-        const title = document.createElement("div");
-        title.className = "achievement-title";
-        title.textContent = (item.unlocked ? "✓ " : "○ ") + item.title;
-        const description = document.createElement("div");
-        description.className = "muted";
-        description.textContent = item.description;
-        card.append(title, description);
-        achievements.appendChild(card);
-      }
-    }
-
-    async function loadProfile() {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (!token || !currentUser) return;
-      const profile = await request("/api/profile", {
-        headers: { Authorization: "Bearer " + token }
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        ...options,
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) }
       });
-      if (currentUser && currentUser.id === profile.user.id) {
-        applyProfile(profile);
+      const body = await response.text();
+      let value;
+      try { value = body ? JSON.parse(body) : {}; }
+      catch { value = { message: body }; }
+      if (!response.ok) {
+        const error = new Error(value.message || body || "Ошибка сервера");
+        error.status = response.status;
+        throw error;
+      }
+      return value;
+    }
+
+    function authHeaders() {
+      return { Authorization: "Bearer " + localStorage.getItem(TOKEN_KEY) };
+    }
+
+    function toast(message) {
+      clearTimeout(toastHandle);
+      el("toast").textContent = message;
+      el("toast").classList.remove("hidden");
+      toastHandle = setTimeout(() => el("toast").classList.add("hidden"), 3800);
+    }
+
+    function avatarIcon(key, name) {
+      const symbols = { rocket: "🚀", planet: "🪐", bolt: "⚡", star: "⭐", shield: "🛡️" };
+      return symbols[key] || (String(name || "R").trim().charAt(0).toUpperCase() || "R");
+    }
+
+    function updateIdentity(user) {
+      currentUser = user;
+      el("topName").textContent = user.name;
+      el("topAvatar").textContent = avatarIcon(user.avatar_key, user.name);
+      el("profileName").textContent = user.name;
+      el("profileEmail").textContent = user.email;
+      el("profileAvatar").textContent = avatarIcon(user.avatar_key, user.name);
+      el("createdAt").textContent = "В проекте с " +
+        new Date(user.created_at).toLocaleDateString("ru-RU");
+    }
+
+    function changePage(name) {
+      const page = ["games", "profile", "referrals"].includes(name) ? name : "games";
+      document.querySelectorAll(".tabs button").forEach(button => {
+        const active = button.dataset.page === page;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-current", active ? "page" : "false");
+      });
+      document.querySelectorAll("main > section").forEach(node => {
+        node.classList.toggle("hidden", node.id !== "page-" + page);
+      });
+      if (currentUser) sessionStorage.setItem(PAGE_PREFIX + currentUser.id, page);
+      if (page === "games") {
+        loadGame().catch(error => {
+          el("numberGameStatus").textContent = "Не удалось загрузить игру: " + error.message;
+        });
+      }
+      if (page === "profile") {
+        loadProfile().catch(error => toast("Не удалось загрузить профиль: " + error.message));
+      }
+      if (page === "referrals") {
+        loadReferrals().catch(error => toast("Не удалось загрузить рефералов: " + error.message));
       }
     }
 
-    document.getElementById("profileSettingsForm").onsubmit = async event => {
-      event.preventDefault();
-      const button = document.getElementById("profileSaveButton");
-      const status = document.getElementById("profileSaveStatus");
-      const name = document.getElementById("profileNameInput").value.trim();
-      if (Array.from(name).length < 2 || Array.from(name).length > 32) {
-        status.textContent = "Имя должно содержать от 2 до 32 символов.";
-        return;
-      }
+    document.querySelectorAll(".tabs button").forEach(button => {
+      button.onclick = () => changePage(button.dataset.page);
+    });
 
+    function showApp() {
+      el("authView").classList.add("hidden");
+      el("appView").classList.remove("hidden");
+      el("topUser").classList.remove("hidden");
+      changePage(sessionStorage.getItem(PAGE_PREFIX + currentUser.id) || "games");
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const register = mode === "register";
+      el("authTitle").textContent = register ? "Регистрация" : "Вход";
+      el("authSubtitle").textContent = register ? "Создай игровой аккаунт." : "Войди, чтобы открыть свой кабинет.";
+      el("nameField").classList.toggle("hidden", !register);
+      el("nameInput").required = register;
+      el("passwordInput").minLength = register ? 8 : 1;
+      el("passwordInput").autocomplete = register ? "new-password" : "current-password";
+      el("passwordInput").placeholder = register ? "Не менее 8 символов" : "Введите пароль";
+      el("authSubmit").textContent = register ? "Создать аккаунт" : "Войти";
+      el("switchText").textContent = register ? "Уже есть аккаунт?" : "Нет аккаунта?";
+      el("switchMode").textContent = register ? "Войти" : "Зарегистрироваться";
+      el("inviteNotice").classList.toggle("hidden", !(register && invitationCode));
+    }
+
+    el("switchMode").onclick = () => setAuthMode(authMode === "login" ? "register" : "login");
+    el("authForm").onsubmit = async event => {
+      event.preventDefault();
+      const button = el("authSubmit");
       button.disabled = true;
-      status.textContent = "Сохранение...";
       try {
-        const token = localStorage.getItem(TOKEN_KEY);
-        const profile = await request("/api/profile", {
-          method: "PATCH",
-          headers: { Authorization: "Bearer " + token },
-          body: JSON.stringify({ name, avatar_key: selectedAvatarKey })
+        const data = {
+          name: el("nameInput").value.trim(),
+          email: el("emailInput").value.trim(),
+          password: el("passwordInput").value
+        };
+        if (authMode === "register" && invitationCode) data.referral_code = invitationCode;
+        const response = await api(authMode === "register" ? "/api/register" : "/api/login", {
+          method: "POST", body: JSON.stringify(data)
         });
-        applyProfile(profile);
-        status.textContent = "Настройки сохранены.";
-        toast("Профиль обновлён");
+        localStorage.setItem(TOKEN_KEY, response.token);
+        updateIdentity(response.user);
+        if (authMode === "register" && invitationCode) {
+          history.replaceState(null, "", window.location.pathname);
+        }
+        showApp();
+        toast(authMode === "register" ? "Аккаунт создан" : "Добро пожаловать");
       } catch (error) {
-        status.textContent = "Ошибка сохранения: " + error.message;
+        toast(error.status === 400 && invitationCode && authMode === "register"
+          ? "Не удалось зарегистрироваться. Проверь приглашение и данные формы."
+          : error.message);
       } finally {
         button.disabled = false;
       }
     };
 
-    document.getElementById("profileNameInput").addEventListener("input", () => {
-      if (selectedAvatarKey === "initial") renderAvatarChoices();
-    });
-
-    document.querySelector('[data-page="profile"]')
-      .addEventListener("click", () => {
-        Promise.allSettled([loadProgress(), loadProfile()]).then(results => {
-          if (results.some(r => r.status === "rejected")) {
-            toast("Не удалось обновить данные профиля.");
-          }
-        });
-      });
-
-    function renderNumberGame() {
-      const game = numberGame || { status: "none", attempts_left: 0 };
-      const active = game.status === "active";
-      const start = document.getElementById("startNumberGame");
-      const controls = document.getElementById("numberGameControls");
-
-      start.disabled = active;
-      document.getElementById("sendNumberGuess").disabled = !active;
-      start.textContent = active ? "Игра идёт" : (game.status === "none" ? "Играть" : "Новая игра");
-      controls.classList.toggle("hidden", !active);
-
-      const status = document.getElementById("numberGameStatus");
-      if (active) {
-        status.textContent = "Попыток осталось: " + game.attempts_left + " из 5";
-      } else if (game.status === "won") {
-        status.textContent = "Победа! Загаданное число: " + game.secret_number;
-      } else if (game.status === "lost") {
-        status.textContent = "Попытки закончились. Загаданное число: " + game.secret_number;
-      } else {
-        status.textContent = "Нажми «Играть», чтобы начать.";
-      }
-
-      document.getElementById("numberGameHint").textContent = numberGameFeedback;
-    }
-
-    async function loadNumberGame() {
-      if (!currentUser) return;
+    async function checkAuth() {
       const token = localStorage.getItem(TOKEN_KEY);
-      numberGame = await request("/api/game/current", {
-        headers: { Authorization: "Bearer " + token }
-      });
-      numberGameFeedback = "";
-      renderNumberGame();
+      if (!token) return;
+      try {
+        const user = await api("/api/me", { headers: authHeaders() });
+        updateIdentity(user);
+        showApp();
+      } catch (error) {
+        if (error.status === 401) localStorage.removeItem(TOKEN_KEY);
+        else toast("Ошибка соединения: " + error.message);
+      }
     }
 
-    document.getElementById("startNumberGame").onclick = async () => {
-      const button = document.getElementById("startNumberGame");
+    el("logoutBtn").onclick = async () => {
+      const button = el("logoutBtn");
       button.disabled = true;
       try {
-        const token = localStorage.getItem(TOKEN_KEY);
-        numberGame = await request("/api/game/start", {
-          method: "POST",
-          headers: { Authorization: "Bearer " + token }
-        });
-        numberGameFeedback = "Угадай число. Удачи!";
-        renderNumberGame();
-        document.getElementById("numberGameGuess").focus();
+        await api("/api/logout", { method: "POST", headers: authHeaders() });
       } catch (error) {
-        numberGameFeedback = "Не удалось начать игру: " + error.message;
-        renderNumberGame();
+        if (error.status !== 401) toast("Сервер не подтвердил выход. Сессия могла остаться активной.");
+      }
+      if (currentUser) sessionStorage.removeItem(PAGE_PREFIX + currentUser.id);
+      localStorage.removeItem(TOKEN_KEY);
+      currentUser = null;
+      game = null;
+      el("appView").classList.add("hidden");
+      el("topUser").classList.add("hidden");
+      el("authView").classList.remove("hidden");
+      el("passwordInput").value = "";
+      button.disabled = false;
+      setAuthMode(invitationCode ? "register" : "login");
+    };
+
+    function renderGame(feedback = "") {
+      const state = game || { status: "none", attempts_left: 0 };
+      const active = state.status === "active";
+      el("startNumberGame").disabled = active;
+      el("startNumberGame").textContent = active ? "Игра идёт" : state.status === "none" ? "Играть" : "Новая игра";
+      el("numberGameForm").classList.toggle("hidden", !active);
+      el("sendNumberGuess").disabled = !active;
+      if (active) {
+        el("numberGameStatus").textContent = "Осталось попыток: " + state.attempts_left + " из 5";
+      } else if (state.status === "won") {
+        el("numberGameStatus").textContent = "Победа. Загаданное число: " + state.secret_number;
+      } else if (state.status === "lost") {
+        el("numberGameStatus").textContent = "Игра окончена. Загаданное число: " + state.secret_number;
+      } else {
+        el("numberGameStatus").textContent = "Начни игру, когда будешь готов.";
+      }
+      el("numberGameHint").textContent = feedback;
+    }
+
+    async function loadGame() {
+      game = await api("/api/game/current", { headers: authHeaders() });
+      renderGame();
+    }
+
+    el("startNumberGame").onclick = async () => {
+      const button = el("startNumberGame");
+      button.disabled = true;
+      try {
+        game = await api("/api/game/start", {
+          method: "POST", headers: authHeaders()
+        });
+        el("numberGameGuess").value = "10";
+        renderGame("Угадай число от 1 до 20.");
+        if (game.status === "active") el("numberGameGuess").focus();
+      } catch (error) {
+        renderGame("Не удалось начать: " + error.message);
       } finally {
-        button.disabled = numberGame?.status === "active";
+        button.disabled = game && game.status === "active";
       }
     };
 
-    document.getElementById("sendNumberGuess").onclick = async () => {
-      if (!numberGame || numberGame.status !== "active") return;
-      const input = document.getElementById("numberGameGuess");
-      const value = Number(input.value);
-      if (!Number.isInteger(value) || value < 1 || value > 20 || input.value.trim() === "") {
-        numberGameFeedback = "Введи целое число от 1 до 20.";
-        renderNumberGame();
+    el("numberGameForm").onsubmit = async event => {
+      event.preventDefault();
+      if (!game || game.status !== "active") return;
+      const raw = el("numberGameGuess").value.trim();
+      const guess = Number(raw);
+      if (!raw || !Number.isInteger(guess) || guess < 1 || guess > 20) {
+        renderGame("Введите целое число от 1 до 20.");
         return;
       }
-
-      const button = document.getElementById("sendNumberGuess");
+      const button = el("sendNumberGuess");
       button.disabled = true;
       try {
-        const token = localStorage.getItem(TOKEN_KEY);
-        numberGame = await request("/api/game/guess", {
-          method: "POST",
-          headers: { Authorization: "Bearer " + token },
-          body: JSON.stringify({ game_id: numberGame.game_id, guess: value })
+        game = await api("/api/game/guess", {
+          method: "POST", headers: authHeaders(),
+          body: JSON.stringify({ game_id: game.game_id, guess })
         });
-
-        if (numberGame.status === "won") {
-          numberGameFeedback = numberGame.xp_awarded > 0
-            ? "Правильно! Получено +" + numberGame.xp_awarded + " XP."
-            : "Правильно! Сегодня награда за игру уже получена.";
-          loadProgress().catch(() => {});
-          loadProfile().catch(() => {});
-        } else if (numberGame.status === "lost") {
-          numberGameFeedback = "Игра окончена. Попробуй ещё раз!";
+        let feedback = "";
+        if (game.status === "won") {
+          feedback = game.xp_awarded > 0
+            ? "Угадал. Начислено +" + game.xp_awarded + " XP."
+            : "Угадал. Сегодня награда за победу уже получена.";
+        } else if (game.status === "lost") {
+          feedback = "Попытки закончились. Можешь начать заново.";
         } else {
-          numberGameFeedback = numberGame.result === "higher"
-            ? "Загаданное число больше."
-            : "Загаданное число меньше.";
+          feedback = game.result === "higher" ? "Загаданное число больше." : "Загаданное число меньше.";
         }
-        renderNumberGame();
+        renderGame(feedback);
       } catch (error) {
-        numberGameFeedback = "Ошибка: " + error.message;
-        renderNumberGame();
+        renderGame("Ошибка проверки: " + error.message);
       } finally {
-        button.disabled = numberGame?.status !== "active";
+        button.disabled = !game || game.status !== "active";
       }
     };
 
-    document.getElementById("numberGameGuess").addEventListener("keydown", event => {
-      if (event.key === "Enter") document.getElementById("sendNumberGuess").click();
+    function renderAvatarChoices() {
+      const list = el("avatarChoices");
+      list.replaceChildren();
+      for (const option of avatarOptions) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "avatar-choice" + (selectedAvatar === option.key ? " selected" : "");
+        button.textContent = avatarIcon(option.key, el("profileNameInput").value);
+        button.title = option.title;
+        button.setAttribute("aria-label", option.title);
+        button.setAttribute("aria-pressed", String(selectedAvatar === option.key));
+        button.onclick = () => {
+          selectedAvatar = option.key;
+          renderAvatarChoices();
+        };
+        list.appendChild(button);
+      }
+    }
+
+    function renderStats(stats) {
+      const root = el("profileStats");
+      root.replaceChildren();
+      const items = [
+        ["Уровень", stats.level],
+        ["Победы", stats.games_won],
+        ["Завершено игр", stats.games_finished],
+        ["Ежедневные отметки", stats.daily_checkins]
+      ];
+      for (const item of items) {
+        const node = document.createElement("div");
+        node.className = "stat";
+        const count = document.createElement("strong");
+        count.textContent = Number(item[1]).toLocaleString("ru-RU");
+        const label = document.createElement("span");
+        label.textContent = item[0];
+        node.append(count, label);
+        root.appendChild(node);
+      }
+    }
+
+    function renderAchievements(items) {
+      const root = el("profileAchievements");
+      root.replaceChildren();
+      const visible = new Set(["first_win", "five_wins", "level_two", "three_checkins"]);
+      for (const achievement of items.filter(item => visible.has(item.id))) {
+        const node = document.createElement("div");
+        node.className = "achievement" + (achievement.unlocked ? "" : " locked");
+        const title = document.createElement("strong");
+        title.textContent = (achievement.unlocked ? "✓ " : "○ ") + achievement.title;
+        const description = document.createElement("span");
+        description.textContent = achievement.description;
+        node.append(title, description);
+        root.appendChild(node);
+      }
+    }
+
+    async function loadProfile() {
+      const [profile, progress] = await Promise.all([
+        api("/api/profile", { headers: authHeaders() }),
+        api("/api/progression", { headers: authHeaders() })
+      ]);
+      if (!currentUser || profile.user.id !== currentUser.id) return;
+      updateIdentity(profile.user);
+      el("profileNameInput").value = profile.user.name;
+      selectedAvatar = profile.user.avatar_key || "initial";
+      renderAvatarChoices();
+      el("playerLevel").textContent = "Уровень " + progress.level;
+      el("playerXP").textContent = progress.xp_in_level + " / " + progress.xp_for_next_level + " XP";
+      el("playerXPBar").max = progress.xp_for_next_level;
+      el("playerXPBar").value = progress.xp_in_level;
+      el("claimDailyXP").disabled = progress.claimed_today;
+      el("claimDailyXP").textContent = progress.claimed_today ? "Сегодня получено" : "Получить XP";
+      renderStats(profile.stats);
+      renderAchievements(profile.achievements);
+    }
+
+    el("profileNameInput").addEventListener("input", () => {
+      if (selectedAvatar === "initial") renderAvatarChoices();
     });
 
-    document.querySelector('[data-page="games"]').addEventListener("click", () => {
-      loadNumberGame().catch(error => {
-        numberGameFeedback = "Не удалось загрузить игру: " + error.message;
-        renderNumberGame();
-      });
-    });
+    el("profileSettingsForm").onsubmit = async event => {
+      event.preventDefault();
+      const button = el("profileSaveButton");
+      const status = el("profileSaveStatus");
+      button.disabled = true;
+      status.textContent = "Сохранение...";
+      try {
+        const name = el("profileNameInput").value.trim();
+        const response = await api("/api/profile", {
+          method: "PATCH", headers: authHeaders(),
+          body: JSON.stringify({ name, avatar_key: selectedAvatar })
+        });
+        updateIdentity(response.user);
+        status.textContent = "Сохранено.";
+        toast("Профиль обновлён");
+      } catch (error) {
+        status.textContent = "Не удалось сохранить: " + error.message;
+      } finally {
+        button.disabled = false;
+      }
+    };
 
-    setMode("login");
+    el("claimDailyXP").onclick = async () => {
+      el("claimDailyXP").disabled = true;
+      try {
+        await api("/api/progression/check-in", {
+          method: "POST", headers: authHeaders()
+        });
+        toast("Получено 25 XP");
+      } catch (error) {
+        toast(error.status === 409 ? "Ежедневная награда уже получена" : error.message);
+      } finally {
+        await loadProfile().catch(() => { el("claimDailyXP").disabled = false; });
+      }
+    };
+
+    async function loadReferrals() {
+      const data = await api("/api/referrals", { headers: authHeaders() });
+      el("referralCount").textContent = Number(data.invited_count).toLocaleString("ru-RU");
+      el("referralLink").value = window.location.origin + window.location.pathname +
+        "?ref=" + encodeURIComponent(data.code);
+    }
+
+    el("copyReferral").onclick = async () => {
+      const link = el("referralLink").value;
+      if (!link) {
+        toast("Ссылка ещё не загружена");
+        return;
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(link);
+        } else {
+          el("referralLink").select();
+          if (!document.execCommand("copy")) throw new Error("Копирование не поддерживается");
+        }
+        toast("Ссылка скопирована");
+      } catch {
+        el("referralLink").select();
+        toast("Не удалось скопировать автоматически. Выдели и скопируй ссылку.");
+      }
+    };
+
+    setAuthMode(invitationCode ? "register" : "login");
     checkAuth();
   </script>
 </body>
-
 </html>
