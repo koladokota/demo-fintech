@@ -618,6 +618,127 @@
       }
     };
 
+    function coins(value) {
+      return Number(value).toLocaleString("ru-RU") + " монет";
+    }
+
+    function setWalletTab(kind) {
+      activeWalletTab = kind;
+      for (const key of ["deposit", "withdraw"]) {
+        const tab = el(key === "deposit" ? "walletDepositTab" : "walletWithdrawTab");
+        const panel = el(key === "deposit" ? "walletDepositPanel" : "walletWithdrawPanel");
+        const selected = kind === key;
+        tab.classList.toggle("active", selected);
+        tab.setAttribute("aria-selected", String(selected));
+        panel.classList.toggle("hidden", !selected);
+      }
+      el("walletActionStatus").textContent = "";
+    }
+
+    el("walletDepositTab").onclick = () => setWalletTab(activeWalletTab === "deposit" ? "" : "deposit");
+    el("walletWithdrawTab").onclick = () => setWalletTab(activeWalletTab === "withdraw" ? "" : "withdraw");
+
+    async function loadWalletData() {
+      if (!currentUser) return;
+      const userID = currentUser.id;
+      const [wallet, features] = await Promise.all([
+        api("/api/wallet", { headers: authHeaders() }),
+        api("/api/features")
+      ]);
+      if (!currentUser || currentUser.id !== userID) return;
+
+      walletBalance = wallet.balance;
+      walletDemoEnabled = features.demo_credits_enabled === true;
+      el("walletBalance").textContent = coins(walletBalance);
+      el("walletDepositSubmit").disabled = !walletDemoEnabled;
+      el("walletWithdrawSubmit").disabled = !walletDemoEnabled;
+      el("walletDepositNotice").textContent = walletDemoEnabled
+        ? "Тестовое начисление виртуальных монет. Реальных платежей нет."
+        : "Пополнение отключено: платёжная система не подключена. Демо-операции доступны только в режиме разработки.";
+      el("walletWithdrawNotice").textContent = walletDemoEnabled
+        ? "Тестовое списание монет. Никакого перевода денег не будет."
+        : "Вывод отключён: денежные выплаты не поддерживаются. Демо-операции доступны только в режиме разработки.";
+
+      const list = el("walletHistory");
+      list.replaceChildren();
+      const transactions = Array.isArray(wallet.transactions) ? wallet.transactions.slice(0, 5) : [];
+      if (transactions.length === 0) {
+        const empty = document.createElement("li");
+        empty.className = "hint";
+        empty.textContent = "Операций пока нет.";
+        list.appendChild(empty);
+      }
+      for (const tx of transactions) {
+        const item = document.createElement("li");
+        const left = document.createElement("div");
+        left.className = "wallet-history-label";
+        const description = document.createElement("strong");
+        description.textContent = tx.description;
+        const time = document.createElement("time");
+        time.dateTime = tx.created_at;
+        time.textContent = new Date(tx.created_at).toLocaleString("ru-RU");
+        left.append(description, time);
+        const amount = document.createElement("span");
+        amount.className = "wallet-history-amount " + (tx.amount >= 0 ? "positive" : "negative");
+        amount.textContent = (tx.amount > 0 ? "+" : "") + coins(tx.amount);
+        item.append(left, amount);
+        list.appendChild(item);
+      }
+    }
+
+    async function submitWalletOperation(kind) {
+      if (!walletDemoEnabled) {
+        el("walletActionStatus").textContent = "Операция недоступна вне демонстрационного режима.";
+        return;
+      }
+      const deposit = kind === "deposit";
+      const input = el(deposit ? "walletDepositAmount" : "walletWithdrawAmount");
+      const submit = el(deposit ? "walletDepositSubmit" : "walletWithdrawSubmit");
+      const amount = Number(input.value);
+      if (!input.value.trim() || !Number.isInteger(amount) || amount < 1 || amount > 100000) {
+        el("walletActionStatus").textContent = "Укажи целое количество от 1 до 100 000 монет.";
+        return;
+      }
+      if (!deposit && walletBalance !== null && amount > walletBalance) {
+        el("walletActionStatus").textContent = "Недостаточно виртуальных монет.";
+        return;
+      }
+      submit.disabled = true;
+      try {
+        const beforeUser = currentUser?.id;
+        const result = await api("/api/wallet/demo-transfer", {
+          method: "POST", headers: authHeaders(),
+          body: JSON.stringify({ kind, amount })
+        });
+        if (!currentUser || currentUser.id !== beforeUser) return;
+        walletBalance = result.balance;
+        el("walletBalance").textContent = coins(result.balance);
+        el("walletActionStatus").textContent = deposit
+          ? "Виртуальный баланс пополнен на " + coins(result.amount) + "."
+          : "Списано " + coins(result.amount) + ". Перевода денежных средств нет.";
+        try {
+          await loadWalletData();
+        } catch {
+          toast("Операция сохранена, но история не обновилась. Перезагрузи страницу.");
+        }
+      } catch (error) {
+        el("walletActionStatus").textContent = error.status === 409
+          ? "Недостаточно виртуальных монет."
+          : "Не удалось выполнить тестовую операцию: " + error.message;
+      } finally {
+        submit.disabled = !walletDemoEnabled;
+      }
+    }
+
+    el("walletDepositForm").onsubmit = event => {
+      event.preventDefault();
+      submitWalletOperation("deposit");
+    };
+    el("walletWithdrawForm").onsubmit = event => {
+      event.preventDefault();
+      submitWalletOperation("withdraw");
+    };
+
     function renderAvatarChoices() {
       const list = el("avatarChoices");
       list.replaceChildren();
