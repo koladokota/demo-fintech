@@ -765,6 +765,8 @@
         password: document.getElementById("passwordInput").value
       };
 
+      const submit = document.getElementById("authSubmit");
+      submit.disabled = true;
       try {
         const endpoint = mode === "login"
           ? "/api/login"
@@ -779,16 +781,32 @@
         currentUser = result.user;
 
         showApp();
-        await loadWallet();
-        await loadProgress();
         toast(mode === "login" ? "Вы вошли в аккаунт" : "Аккаунт создан");
-
+        await refreshAccountData();
       } catch (error) {
         toast(error.message);
+      } finally {
+        submit.disabled = false;
       }
     };
 
     // Проверка авторизации
+
+    async function loadFeatures() {
+      const flags = await request("/api/features");
+      const enabled = flags.demo_credits_enabled === true;
+      document.getElementById("demoActions").classList.toggle("hidden", !enabled);
+      document.getElementById("demoActionsNotice").textContent = enabled
+        ? "Режим разработки: операции меняют виртуальный баланс в PostgreSQL."
+        : "Тестовые операции недоступны в обычном режиме.";
+    }
+
+    async function refreshAccountData() {
+      const results = await Promise.allSettled([loadWallet(), loadInventory(), loadProgress()]);
+      if (results.some(result => result.status === "rejected")) {
+        toast("Часть данных не загрузилась. Попробуйте обновить страницу.");
+      }
+    }
 
     async function loadWallet() {
       const token = localStorage.getItem(TOKEN_KEY);
@@ -830,37 +848,41 @@
       }
 
       showApp();
-      try {
-        await loadWallet();
-      } catch (error) {
-        toast("Не удалось загрузить кошелёк: " + error.message);
-      }
-      try {
-        await loadInventory();
-      } catch (error) {
-        toast("Не удалось загрузить инвентарь: " + error.message);
-      }
-      try {
-        await loadProgress();
-      } catch (error) {
-        toast("Не удалось загрузить уровень: " + error.message);
-      }
+      await refreshAccountData();
     }
 
     // Выход
 
-    document.getElementById("logoutBtn").onclick = () => {
+    document.getElementById("logoutBtn").onclick = async () => {
+      const button = document.getElementById("logoutBtn");
+      button.disabled = true;
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) {
+        try {
+          await request("/api/logout", {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token }
+          });
+        } catch (error) {
+          if (error.status !== 401) {
+            toast("Не удалось отозвать сессию на сервере. Проверьте соединение.");
+          }
+        }
+      }
       if (currentUser) {
         sessionStorage.removeItem(PAGE_KEY_PREFIX + currentUser.id);
       }
       localStorage.removeItem(TOKEN_KEY);
       currentUser = null;
-
+      demo = { balance: 0, transactions: [] };
+      inventory = [];
+      playerProgress = null;
+      numberGame = null;
       document.getElementById("appView").classList.add("hidden");
       document.getElementById("topUser").classList.add("hidden");
       document.getElementById("authView").classList.remove("hidden");
-
       document.getElementById("passwordInput").value = "";
+      button.disabled = false;
     };
 
     // Навигация
